@@ -1,11 +1,21 @@
 <template>
-  <div class="sidenav">
-     <ul id="playlists">
-         <li v-for="playlist in playlists" v-bind:key="playlist.id" @click="openPlayList(playlist)">
-            {{playlist.name}}
-         </li>
-     </ul>
-  </div>
+    <div>
+        <nav class="navbar navbar-light bg-light justify-content-between">
+            <a class="navbar-brand">Navbar</a>
+            <form class="form-inline">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </nav>
+        <div class="sidenav">
+            <ul id="playlists">
+                <li v-for="playlist in playlists" v-bind:key="playlist.id" @click="openPlayList(playlist)">
+                {{playlist.name}}
+                </li>
+                <li>omgthisissolongomgomgomgomgomg</li>
+            </ul>
+        </div>
+    </div>
 </template>
 
 <script lang="ts">
@@ -21,11 +31,22 @@
         id: string;
     }
 
+    interface playlistSongs {
+        playlistName: string;
+        songs: playlistItem[];
+    }
+
+    interface playlistItem {
+        song: string;
+        artist: string;
+    }
+
     @Component({
         components: {}
     })
     export default class main extends Vue {
 
+        
         private playlists:playlist[] = [];
         created(){           
             spotify.getUserPlaylists().then((response) =>{
@@ -37,6 +58,9 @@
                 });
             }, function(err){
                 console.log(err.responseXML);
+                if (err.responseXML === null){
+                    router.push("/login")
+                }
             })
             
         }
@@ -48,6 +72,9 @@
 
         openPlayList(aplayList:playlist){
             console.log(aplayList);
+            spotify.getPlaylist(aplayList.id).then((response)=> {
+                console.log(response)
+            })
         }
     }
 </script>
@@ -56,14 +83,14 @@
 <style scoped>
 .sidenav {
   height: 100%; /* Full-height: remove this if you want "auto" height */
-  width: 160px; /* Set the width of the sidebar */
+  width: 250px; /* Set the width of the sidebar */
   position: fixed; /* Fixed Sidebar (stay in place on scroll) */
   z-index: 1; /* Stay on top */
   top: 0; /* Stay at the top */
   left: 0;
   background-color: #111; /* Black */
-  overflow-x: hidden; /* Disable horizontal scroll */
   padding-top: 20px;
+  
 }
 
 /* The navigation menu links */
@@ -76,6 +103,7 @@
   text-align: left;
   list-style-type: none;
   cursor: pointer;
+  word-wrap:break-word;
 }
 
 .sidenav ul{
@@ -89,7 +117,7 @@
 
 /* Style page content */
 .main {
-  margin-left: 160px; /* Same as the width of the sidebar */
+  margin-left: 250px; /* Same as the width of the sidebar */
   padding: 0px 10px;
 }
 
