@@ -1,31 +1,29 @@
 <template>
-  <div class="hello">
-    <p>{{msg}}</P>
-     <a href='http://127.0.0.1:5000/login'>
-        <button>Login with spotify</button>
-     </a> 
-     <button v-on:click="getStuff()">get user details</button>
+  <div class="centered">
+    <a href='http://127.0.0.1:5000/'>
+      <img style="cursor: pointer;" src="../../Images/log_in-desktop-large.png">
+    </a>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import axios from 'axios';
-import SpotifyWebApi from 'spotify-web-api-js'
+import SpotifyWebApi from 'spotify-web-api-js';
 import router from '../router';
 
 const spotify = new SpotifyWebApi();
 
-@Component
-export default class SpotifyLogin extends Vue {
-  @Prop() private msg: string = "testing";
+@Component({
+  components: {}
+})
+export default class spotifyLogin extends Vue {
   private params: any;
   created() {
     this.params = this.getHashParams();
     if (this.params.access_token){
       spotify.setAccessToken(this.params.access_token);
-      router.push('about');
-      console.log(this.params.access_token)
+      router.push('/');   
     }
   }
   
@@ -36,7 +34,7 @@ export default class SpotifyLogin extends Vue {
   getHashParams(){
     var hashParams = {} as any;
     var e, r = /([^&;=]+)=?([^&;]*)/g,
-        q = window.location.hash.substring(1);
+        q = window.location.hash.substring(1)
     while ( e = r.exec(q)) {
       hashParams[e[1]] = decodeURIComponent(e[2]);
     }
@@ -53,4 +51,24 @@ export default class SpotifyLogin extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+  .center-screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .centered {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    /* bring your own prefixes */
+    transform: translate(-50%, -50%);
+  }
 </style>

@@ -1,38 +1,101 @@
 <template>
-  <div class="hello">
-     <button v-on:click="getStuff()">get user details</button>
-     <SpotifyLogin>  </SpotifyLogin>
+  <div class="sidenav">
+     <ul id="playlists">
+         <li v-for="playlist in playlists" v-bind:key="playlist.id" @click="openPlayList(playlist)">
+            {{playlist.name}}
+         </li>
+     </ul>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
-import SpotifyWebApi from 'spotify-web-api-js'
-import SpotifyLogin from './components/spotifyLogin.vue';
-import router from '../router';
+    import { Prop, Vue } from 'vue-property-decorator';
+    import Component from 'vue-class-component';
+    import SpotifyWebApi from 'spotify-web-api-js'
+    import router from '../router';
 
-const spotify = new SpotifyWebApi();
+    const spotify = new SpotifyWebApi();
 
-@Component({
-    components: {}
-})
-export default class main extends Vue {
-
-    private fromLogin: string = '';
-
-    onLoginSend(value: string){
-        this.fromLogin = value;
+    interface playlist{
+        name: string;
+        id: string;
     }
 
-    getStuff(){
-        spotify.getMe().then((response) => {
-        console.log(response)
-        })
-    }
+    @Component({
+        components: {}
+    })
+    export default class main extends Vue {
 
-}
+        private playlists:playlist[] = [];
+        created(){           
+            spotify.getUserPlaylists().then((response) =>{
+                console.log(response);
+                console.log(response.items[0])
+                response.items.forEach(playlist => {
+                    let playlist1: playlist = {name: playlist.name, id: playlist.id}
+                    this.playlists.push(playlist1);
+                });
+            }, function(err){
+                console.log(err.responseXML);
+            })
+            
+        }
+        getStuff(){
+            spotify.getMe().then((response) => {
+                console.log(response);
+            })
+        }
+
+        openPlayList(aplayList:playlist){
+            console.log(aplayList);
+        }
+    }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.sidenav {
+  height: 100%; /* Full-height: remove this if you want "auto" height */
+  width: 160px; /* Set the width of the sidebar */
+  position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+  z-index: 1; /* Stay on top */
+  top: 0; /* Stay at the top */
+  left: 0;
+  background-color: #111; /* Black */
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 20px;
+}
+
+/* The navigation menu links */
+.sidenav li{
+  padding-top: 15px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  text-align: left;
+  list-style-type: none;
+  cursor: pointer;
+}
+
+.sidenav ul{
+    padding-inline-start: 10px;
+}
+
+/* When you mouse over the navigation links, change their color */
+.sidenav li:hover {
+  color: #f1f1f1;
+}
+
+/* Style page content */
+.main {
+  margin-left: 160px; /* Same as the width of the sidebar */
+  padding: 0px 10px;
+}
+
+/* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
+@media screen and (max-height: 450px) {
+  .sidenav {padding-top: 15px;}
+  .sidenav a {font-size: 18px;}
+}
 </style>
