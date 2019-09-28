@@ -1,19 +1,49 @@
 <template>
     <div>
-        <nav class="navbar navbar-light bg-light justify-content-between">
-            <a class="navbar-brand">Navbar</a>
+        <nav class="navbar navbar-inverse navbar-fixed-top header">
+            <a class="navbar-brand">Playlist Merger</a>
             <form class="form-inline">
                 <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
             </form>
         </nav>
-        <div class="sidenav">
-            <ul id="playlists">
-                <li v-for="playlist in playlists" v-bind:key="playlist.id" @click="openPlayList(playlist)">
-                {{playlist.name}}
-                </li>
-                <li>omgthisissolongomgomgomgomgomg</li>
-            </ul>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-4 col-md-3 col-lg-2 sidenav">
+                    <ul id="playlists">
+                        <li v-for="playlist in playlists" v-bind:key="playlist.id" :style="listItemStyle(playlist.id)" @click="openPlayList(playlist)">
+                        {{playlist.name}}
+                        </li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <section>
+                        <div class="container">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th v-for="playlist in playlistSongsSelected" v-bind:key="playlist.playlistID">{{playlist.playlistName}}</th>
+
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>                                  
+                                            <td v-for="(playlist, index) in playlistSongsSelected" v-bind:key="playlist.playlistID">
+                                                <ul class="songsLists">
+                                                    <li v-for="songs in playlistSongsSelected[index].songs" v-bind:key="songs.song">
+                                                        {{songs.song}}
+                                                    </li>
+                                                </ul>  
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -33,6 +63,7 @@
 
     interface playlistSongs {
         playlistName: string;
+        playlistID: number;
         songs: playlistItem[];
     }
 
@@ -48,6 +79,7 @@
 
         
         private playlists:playlist[] = [];
+        private playlistSongsSelected:playlistSongs[] = [];
         created(){           
             spotify.getUserPlaylists().then((response) =>{
                 console.log(response);
@@ -55,6 +87,7 @@
                 response.items.forEach(playlist => {
                     let playlist1: playlist = {name: playlist.name, id: playlist.id}
                     this.playlists.push(playlist1);
+                    this.openPlayList(playlist1);
                 });
             }, function(err){
                 console.log(err.responseXML);
@@ -64,7 +97,7 @@
             })
             
         }
-        getStuff(){
+        GetStuff(){
             spotify.getMe().then((response) => {
                 console.log(response);
             })
@@ -74,32 +107,56 @@
             console.log(aplayList);
             spotify.getPlaylist(aplayList.id).then((response)=> {
                 console.log(response)
+                this.ParsePlaylist(response)
             })
         }
+
+        ParsePlaylist(playlist: any){
+            let playlistIndex: number = this.playlistSongsSelected.map(x => x.playlistID).indexOf(playlist.id);
+            if (this.playlistSongsSelected.map(x => x.playlistID).includes(playlist.id)){
+                this.playlistSongsSelected.splice(playlistIndex,1);
+            }else{
+                let playlistItems1: playlistItem[] = [];
+                playlist.tracks.items.forEach(item => {
+                    let artistsTemp: string = '';
+                    let artists: string = '';
+                    item.track.artists.forEach(artist => {
+                        artistsTemp = artistsTemp + artist.name + ', ';
+                    });
+                    if (artistsTemp.length > 0){
+                        artists = artistsTemp.substring(0, artistsTemp.length - 2);
+                    }
+                    let playlistItem1: playlistItem = {song: item.track.name, artist: artists};
+                    playlistItems1.push(playlistItem1);
+                });
+                let playlistSongs1: playlistSongs = {playlistName: playlist.name, playlistID: playlist.id, songs: playlistItems1};
+                console.log(playlistSongs1);
+                this.playlistSongsSelected.push(playlistSongs1);
+                
+                console.log(this.playlistSongsSelected);
+            }
+        }
+        
+        listItemStyle(playlistId: number){
+            if (this.playlistSongsSelected.map(x => x.playlistID).includes(playlistId)){
+                return 'color: white;';
+            }
+        }
+
     }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.sidenav {
-  height: 100%; /* Full-height: remove this if you want "auto" height */
-  width: 250px; /* Set the width of the sidebar */
-  position: fixed; /* Fixed Sidebar (stay in place on scroll) */
-  z-index: 1; /* Stay on top */
-  top: 0; /* Stay at the top */
-  left: 0;
-  background-color: #111; /* Black */
-  padding-top: 20px;
-  
-}
+
 
 /* The navigation menu links */
 .sidenav li{
   padding-top: 15px;
   text-decoration: none;
   font-size: 25px;
-  color: #818181;
   display: block;
+  color: #818181;
   text-align: left;
   list-style-type: none;
   cursor: pointer;
@@ -112,18 +169,53 @@
 
 /* When you mouse over the navigation links, change their color */
 .sidenav li:hover {
-  color: #f1f1f1;
+    color: #f1f1f1;
 }
 
-/* Style page content */
-.main {
-  margin-left: 250px; /* Same as the width of the sidebar */
-  padding: 0px 10px;
+.sidenav li:active {
+    color: #f1f1f1;
+}
+
+.header{
+    background-color: #282828;
+}
+
+.table {
+    margin: 0 auto;
+    min-width: 60%;
+    width: auto !important;
+    max-width: 100%;
+}
+
+.table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+}
+
+.songsLists {
+    list-style-type: none;
+    text-align: left;
 }
 
 /* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
 @media screen and (max-height: 450px) {
   .sidenav {padding-top: 15px;}
   .sidenav a {font-size: 18px;}
+}
+
+@media (min-width: 544px) {
+    .sidenav {
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        display: block;
+        padding: 0;
+        padding-bottom: 0;
+        overflow-x: hidden;
+        overflow-y: hidden;
+        background-color: #282828;
+        border-top: 1px solid #181818;
+    }
 }
 </style>
