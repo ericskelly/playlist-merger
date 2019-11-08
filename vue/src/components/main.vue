@@ -8,7 +8,7 @@
       </form>
     </nav>
     <div class="container-fluid">
-      <div class="row">
+      <div class="row" style="height: 100vh;">
         <!--<div class="col-sm-4 col-md-3 col-lg-2 sidenav">
           <ul id="playlists">
             <li
@@ -19,87 +19,81 @@
             >{{playlist.name}}</li>
           </ul>
         </div>-->
-        <template>
-          <v-card class="mx-auto" max-width="500" tile width="300">
-            <v-list rounded>
-              <v-subheader>Playlists</v-subheader>
-              <v-list-item-group
-                multiple
-                v-model="selected"
-                active-class="pink--text"
-                style="text-align: left"
+        <v-card class="mx-auto" max-width="500" tile width="300">
+          <v-list rounded>
+            <v-subheader>Playlists</v-subheader>
+            <v-list-item-group
+              multiple
+              v-model="selected"
+              active-class="pink--text"
+              style="text-align: left"
+            >
+              <v-list-item
+                v-for="playlist in playlists"
+                v-bind:key="playlist.id"
+                @click="openPlayList(playlist)"
               >
-                <v-list-item
-                  v-for="playlist in playlists"
-                  v-bind:key="playlist.id"
-                  @click="openPlayList(playlist)"
-                >
-                  <template v-slot:default="{ active, toggle }">
-                    <v-list-item-content>
-                      <v-list-item-title v-text="playlist.name"></v-list-item-title>
-                    </v-list-item-content>
-                  </template>
-                </v-list-item>
-              </v-list-item-group>
-            </v-list>
-          </v-card>
-        </template>
+                <template v-slot:default="{ active, toggle }">
+                  <v-list-item-content>
+                    <v-list-item-title v-text="playlist.name"></v-list-item-title>
+                  </v-list-item-content>
+                </template>
+              </v-list-item>
+            </v-list-item-group>
+          </v-list>
+        </v-card>
         <div class="col">
+          <div>
+            <b-dropdown id="dropdown-1" text="Merge" class="m-md-2">
+              <b-dropdown-item @click="SortTop(5)">Top 5</b-dropdown-item>
+              <b-dropdown-divider></b-dropdown-divider>
+              <b-dropdown-item @click="SortTop(10)">Top 10</b-dropdown-item>
+              <b-dropdown-item @click="SortTop(50)">Top 50</b-dropdown-item>
+            </b-dropdown>
+          </div>
           <section>
             <div class="container">
-              <!--<template>
-                <v-row justify="center">
-                  <v-expansion-panels popout>
-                    <v-expansion-panel>
-                      <v-expansion-panel-header>Item</v-expansion-panel-header>
-                      <v-expansion-panel-content>
-                        
-                      </v-expansion-panel-content>
-                    </v-expansion-panel>
-                  </v-expansion-panels>
-                </v-row>
-              </template>-->
-              <template>
-                <div class="text-center">
-                  <v-menu offset-y>
-                    <template v-slot:activator="{ on }">
-                      <v-btn color="primary" dark v-on="on">Dropdown</v-btn>
-                    </template>
+              <v-row dense>
+                <v-col
+                  v-for="(playlist, index) in playlistSongsSelected"
+                  v-bind:key="playlist.playlistID"
+                  :cols="3"
+                >
+                  <v-card class="mx-auto" tile>
+                    <v-card-title>
+                      <div style="display: flex; justify-content: space-between; width: 100%">
+                        <div>{{playlistSongsSelected[index].playlistName}}</div>
+                        <div>
+                          <b-dropdown id="dropdown-1" offset="-120px" size="sm" text class>
+                            <b-dropdown-header id="dropdown-header-label1">Merge Options</b-dropdown-header>
+                            <b-dropdown-divider></b-dropdown-divider>
+                            <b-dropdown-header id="dropdown-header-label1">Top Songs</b-dropdown-header>
+                            <b-dropdown-item @click="SortTop(5)">Top 5</b-dropdown-item>
+
+                            <b-dropdown-item @click="SortTop(10)">Top 10</b-dropdown-item>
+                            <b-dropdown-item @click="SortTop(50)">Top 50</b-dropdown-item>
+                            <b-dropdown-header id="dropdown-header-label2">Genre</b-dropdown-header>
+                          </b-dropdown>
+                        </div>
+                      </div>
+                    </v-card-title>
                     <v-list>
-                      <v-list-item v-for="(item, index) in items" :key="index">
-                        <v-list-item-title>{{ item.title }}</v-list-item-title>
+                      <v-list-item
+                        two-line
+                        v-for="songs in playlistSongsSelected[index].songs"
+                        v-bind:key="songs.song"
+                        v-bind:style="[songs.highlight ? {'color': '#008000'} : {'color': '#000000'}]"
+                        style="text-align: left; max-height: 50px"
+                      >
+                        <v-list-item-content>
+                          <v-list-item-title>{{songs.song}}</v-list-item-title>
+                          <v-list-item-subtitle>{{songs.artist}}</v-list-item-subtitle>
+                        </v-list-item-content>
                       </v-list-item>
                     </v-list>
-                  </v-menu>
-                </div>
-              </template>
-              <div class="table-responsive">
-                <table class="table">
-                  <thead>
-                    <tr style="text-align: left;">
-                      <th
-                        v-for="playlist in playlistSongsSelected"
-                        v-bind:key="playlist.playlistID"
-                      >{{playlist.playlistName}}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td
-                        v-for="(playlist, index) in playlistSongsSelected"
-                        v-bind:key="playlist.playlistID"
-                      >
-                        <ul class="songsLists">
-                          <li
-                            v-for="songs in playlistSongsSelected[index].songs"
-                            v-bind:key="songs.song"
-                          >{{songs.song}}</li>
-                        </ul>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+                  </v-card>
+                </v-col>
+              </v-row>
             </div>
           </section>
         </div>
@@ -128,8 +122,10 @@ interface playlistSongs {
 }
 
 interface playlistItem {
+  songId: string;
   song: string;
   artist: string;
+  highlight: boolean;
 }
 
 @Component({
@@ -138,19 +134,21 @@ interface playlistItem {
 export default class main extends Vue {
   private playlists: playlist[] = [];
   private playlistSongsSelected: playlistSongs[] = [];
-  private selected: any = [0, 1, 2, 3, 4];
+  private selected: number[] = [];
+  private topSelectedSongsForMerge: playlistItem[] = [];
   created() {
     spotify.getUserPlaylists().then(
       response => {
-        console.log(response);
-        console.log(response.items[0]);
+        let playlistCount = 0;
         response.items.forEach(playlist => {
           let playlist1: playlist = { name: playlist.name, id: playlist.id };
           this.playlists.push(playlist1);
           this.openPlayList(playlist1);
+          this.selected.push(playlistCount);
+          playlistCount += 1;
         });
       },
-      function(err) {
+      function (err) {
         console.log(err.responseXML);
         if (err.responseXML === null) {
           router.push("/login");
@@ -176,46 +174,69 @@ export default class main extends Vue {
     let playlistIndex: number = this.playlistSongsSelected
       .map(x => x.playlistID)
       .indexOf(playlist.id);
-    if (
-      this.playlistSongsSelected.map(x => x.playlistID).includes(playlist.id)
-    ) {
+    if (this.playlistSongsSelected.map(x => x.playlistID).includes(playlist.id)) {
       this.playlistSongsSelected.splice(playlistIndex, 1);
     } else {
+      let totalPlayListSongs: number = playlist.tracks.total;
       let playlistItems1: playlistItem[] = [];
-      playlist.tracks.items.forEach(item => {
-        let artistsTemp: string = "";
-        let artists: string = "";
-        item.track.artists.forEach(artist => {
-          artistsTemp = artistsTemp + artist.name + ", ";
+
+      let numberCalls = Math.ceil(totalPlayListSongs / 100);
+      let promiseArray = [];
+      let offset = 0;
+      for (let i = 0; i < numberCalls; ++i) {
+        let promise = spotify.getPlaylistTracks(playlist.id, { 'limit': 100, 'offset': offset })
+        promiseArray.push(promise);
+        offset += 100;
+      }
+
+      Promise.all(promiseArray).then(setOfTracks => {
+        setOfTracks.forEach(set => {
+          set.items.forEach(item => {
+            let artistsTemp: string = "";
+            let artists: string = "";
+            item.track.artists.forEach(artist => {
+              artistsTemp = artistsTemp + artist.name + ", ";
+            });
+            if (artistsTemp.length > 0) {
+              artists = artistsTemp.substring(0, artistsTemp.length - 2);
+            }
+            let playlistItem1: playlistItem = {
+              song: item.track.name,
+              artist: artists,
+              songId: item.track.id,
+              highlight: false
+            };
+            playlistItems1.push(playlistItem1);
+          });
         });
-        if (artistsTemp.length > 0) {
-          artists = artistsTemp.substring(0, artistsTemp.length - 2);
-        }
-        let playlistItem1: playlistItem = {
-          song: item.track.name,
-          artist: artists
-        };
-        playlistItems1.push(playlistItem1);
       });
+
       let playlistSongs1: playlistSongs = {
         playlistName: playlist.name,
         playlistID: playlist.id,
         songs: playlistItems1
       };
-      console.log(playlistSongs1);
       this.playlistSongsSelected.push(playlistSongs1);
 
-      console.log(this.playlistSongsSelected);
     }
   }
 
-  listItemStyle(playlistId: number) {
-    if (
-      this.playlistSongsSelected.map(x => x.playlistID).includes(playlistId)
-    ) {
-      return "color: white;";
-    }
+  SortTop(numberItems: number) {
+    spotify.getMyTopTracks({ 'limit': numberItems }).then(topSongs => {
+      let topSongsArray = topSongs.items.sort(function (a, b) { return b.popularity - a.popularity });
+
+      console.log(topSongsArray);
+      this.playlistSongsSelected.forEach(playlist => {
+        playlist.songs.forEach(song => {
+          if (topSongsArray.map(x => x.id).includes(song.songId) || topSongsArray.map(x => x.name).includes(song.song)) {
+            //this.topSelectedSongsForMerge.push(song);
+            song.highlight = true;
+          }
+        })
+      })
+    });
   }
+
 }
 </script>
 
@@ -257,6 +278,10 @@ export default class main extends Vue {
 
 .sidenav li:active {
   color: #f1f1f1;
+}
+
+.selectedMerge {
+  color: green;
 }
 
 .header {
