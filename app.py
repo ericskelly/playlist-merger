@@ -34,7 +34,7 @@ def login():
             access_token = token_info['access_token']
 
     if access_token:
-        return redirect('http://http://ericwebserver.eastus.cloudapp.azure.com:80/login/#access_token=' + access_token)
+        return redirect('http://ericwebserver.eastus.cloudapp.azure.com:8008/login/#access_token=' + access_token)
     else:
         return htmlForLoginButton()
 
