@@ -1,6 +1,6 @@
 <template>
   <div class="centered">
-    <a v-bind:href="URL">
+    <a href="http://ericwebserver.eastus.cloudapp.azure.com:8080">
       <img style="cursor: pointer;" src="../../Images/log_in-desktop-large.png" />
     </a>
   </div>
