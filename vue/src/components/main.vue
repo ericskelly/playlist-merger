@@ -1,37 +1,22 @@
 <template>
   <div>
     <nav class="navbar navbar-inverse navbar-fixed-top header">
-      <a class="navbar-brand">Playlist Merger</a>
+      <a class="navbar-brand" style="color: #1DB954">Spotify Playlist Merger</a>
       <form class="form-inline">
         <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" />
         <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
       </form>
     </nav>
     <div class="container-fluid">
-      <div class="row" style="height: 100vh;">
-        <!--<div class="col-sm-4 col-md-3 col-lg-2 sidenav">
-          <ul id="playlists">
-            <li
-              v-for="playlist in playlists"
-              v-bind:key="playlist.id"
-              :style="listItemStyle(playlist.id)"
-              @click="openPlayList(playlist)"
-            >{{playlist.name}}</li>
-          </ul>
-        </div>-->
-        <v-card class="mx-auto" max-width="500" tile width="300">
-          <v-list rounded>
+      <div class="row">
+        <v-card dark class="mx-auto" max-width="500" tile width="300" style="min-height: 100vh;">
+          <v-list rounded style="background-color">
             <v-subheader>Playlists</v-subheader>
-            <v-list-item-group
-              multiple
-              v-model="selected"
-              active-class="pink--text"
-              style="text-align: left"
-            >
+            <v-list-item-group multiple v-model="selected" style="text-align: left">
               <v-list-item
                 v-for="playlist in playlists"
                 v-bind:key="playlist.id"
-                @click="openPlayList(playlist)"
+                @click="OpenPlayList(playlist)"
               >
                 <template v-slot:default="{ active, toggle }">
                   <v-list-item-content>
@@ -42,27 +27,90 @@
             </v-list-item-group>
           </v-list>
         </v-card>
-        <div class="col">
-          <div>
-            <b-dropdown id="dropdown-1" text="Merge" class="m-md-2">
-              <b-dropdown-item @click="SortTop(5)">Top 5</b-dropdown-item>
-              <b-dropdown-divider></b-dropdown-divider>
-              <b-dropdown-item @click="SortTop(10)">Top 10</b-dropdown-item>
-              <b-dropdown-item @click="SortTop(50)">Top 50</b-dropdown-item>
-            </b-dropdown>
-          </div>
+        <div class="col" style="background-color: #353535">
           <section>
-            <div class="container">
-              <v-row dense>
+            <div class="container" v-if="playlistsLoaded">
+              <div style="border: 1px solid #1DB954">
+                <v-row>
+                  <v-col v-if="topSelectedSongsForMerge.length > 0" :justify="start">
+                    <v-btn @click="ShowOrHide()">Merged Playlist</v-btn>
+                  </v-col>
+                  <v-col :justify="start">
+                    <v-btn @click="ShowOrHideSongs()">Display Songs</v-btn>
+                  </v-col>
+                  <v-col>
+                    <b-dropdown id="dropdown-1" text="Merge" class="m-md-2">
+                      <b-dropdown-item @click="SortTop(5)">Top 5</b-dropdown-item>
+                      <b-dropdown-divider></b-dropdown-divider>
+                      <b-dropdown-item @click="SortTop(10)">Top 10</b-dropdown-item>
+                      <b-dropdown-item @click="SortTop(50)">Top 50</b-dropdown-item>
+                    </b-dropdown>
+                  </v-col>
+                  <v-col></v-col>
+                </v-row>
+              </div>
+              <v-row v-if="columns != -1">
+                <v-col :cols="3" v-if="topSelectedSongsForMerge.length > 0">
+                  <v-card
+                    style="border: 1px solid #1DB954"
+                    shaped
+                    class="mx-auto"
+                    tile
+                    dark
+                    v-if="showMerged"
+                  >
+                    <v-card-title>
+                      <div style="display: flex; justify-content: space-between; width: 100%">
+                        <v-chip outlined>
+                          Merged Playlist
+                          <v-icon left>mdi-server-plus</v-icon>
+                        </v-chip>
+                        <v-btn @click="dialog=true">create</v-btn>
+                        <!--<v-dialog v-model="dialog" max-width="290">
+                          <v-card>
+                            <v-card-title class="headline">Use Google's location service?</v-card-title>
+
+                            <v-card-text>Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running.</v-card-text>
+
+                            <v-card-actions>
+                              <v-spacer></v-spacer>
+
+                              <v-btn color="green darken-1" text @click="dialog = false">Disagree</v-btn>
+
+                              <v-btn color="green darken-1" text @click="dialog = false">Agree</v-btn>
+                            </v-card-actions>
+                          </v-card>
+                        </v-dialog>-->
+                      </div>
+                    </v-card-title>
+                    <v-divider></v-divider>
+                    <v-list class="scrollStyle" max-height="500px">
+                      <v-list-item
+                        two-line
+                        v-for="songs in topSelectedSongsForMerge"
+                        v-bind:key="songs.song"
+                        style="text-align: left; max-height: 50px"
+                      >
+                        <v-list-item-content>
+                          <v-list-item-title>{{songs.song}}</v-list-item-title>
+                          <v-list-item-subtitle>{{songs.artist}}</v-list-item-subtitle>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list>
+                  </v-card>
+                </v-col>
                 <v-col
                   v-for="(playlist, index) in playlistSongsSelected"
                   v-bind:key="playlist.playlistID"
-                  :cols="3"
+                  v-bind:cols="3"
                 >
-                  <v-card class="mx-auto" tile>
+                  <v-card class="mx-auto" tile dark>
                     <v-card-title>
                       <div style="display: flex; justify-content: space-between; width: 100%">
-                        <div>{{playlistSongsSelected[index].playlistName}}</div>
+                        <v-chip outlined>
+                          {{playlistSongsSelected[index].playlistName}}
+                          <v-icon left>mdi-server-plus</v-icon>
+                        </v-chip>
                         <div>
                           <b-dropdown id="dropdown-1" offset="-120px" size="sm" text class>
                             <b-dropdown-header id="dropdown-header-label1">Merge Options</b-dropdown-header>
@@ -77,7 +125,8 @@
                         </div>
                       </div>
                     </v-card-title>
-                    <v-list>
+                    <v-divider></v-divider>
+                    <v-list class="scrollStyle" max-height="500px" v-if="showSongs">
                       <v-list-item
                         two-line
                         v-for="songs in playlistSongsSelected[index].songs"
@@ -119,6 +168,7 @@ interface playlistSongs {
   playlistName: string;
   playlistID: number;
   songs: playlistItem[];
+  numberSongs: number;
 }
 
 interface playlistItem {
@@ -136,16 +186,24 @@ export default class main extends Vue {
   private playlistSongsSelected: playlistSongs[] = [];
   private selected: number[] = [];
   private topSelectedSongsForMerge: playlistItem[] = [];
+  private playlistCount: number = 0;
+  private showMerged: boolean = true;
+  private playlistsLoaded: boolean = false;
+  private showSongs: boolean = true;
+  private userID: string = '';
+  private dialog: boolean = false;
   created() {
+    spotify.getMe().then(user => {
+      this.userID = user.id;
+    })
     spotify.getUserPlaylists().then(
       response => {
-        let playlistCount = 0;
         response.items.forEach(playlist => {
           let playlist1: playlist = { name: playlist.name, id: playlist.id };
           this.playlists.push(playlist1);
-          this.openPlayList(playlist1);
-          this.selected.push(playlistCount);
-          playlistCount += 1;
+          //this.OpenPlayList(playlist1);
+          this.selected.push(this.playlistCount);
+          this.playlistCount += 1;
         });
       },
       function (err) {
@@ -154,18 +212,24 @@ export default class main extends Vue {
           router.push("/login");
         }
       }
-    );
-  }
-  GetStuff() {
-    spotify.getMe().then(response => {
-      console.log(response);
-    });
+    ).then(() => this.OpenPlayLists());
   }
 
-  openPlayList(aplayList: playlist) {
-    console.log(aplayList);
+  OpenPlayLists() {
+    let promiseArray: any = [];
+    this.playlists.forEach(playlist => {
+      let promise = spotify.getPlaylist(playlist.id);
+      promiseArray.push(promise);
+    });
+    Promise.all(promiseArray).then(playlists => {
+      playlists.forEach(playlist => {
+        this.ParsePlaylist(playlist);
+      })
+    }).then(() => this.playlistsLoaded = true);
+  }
+
+  OpenPlayList(aplayList: playlist) {
     spotify.getPlaylist(aplayList.id).then(response => {
-      console.log(response);
       this.ParsePlaylist(response);
     });
   }
@@ -189,6 +253,7 @@ export default class main extends Vue {
         offset += 100;
       }
 
+      let numberSongs = 0;
       Promise.all(promiseArray).then(setOfTracks => {
         setOfTracks.forEach(set => {
           set.items.forEach(item => {
@@ -207,6 +272,7 @@ export default class main extends Vue {
               highlight: false
             };
             playlistItems1.push(playlistItem1);
+            numberSongs += 1;
           });
         });
       });
@@ -214,27 +280,59 @@ export default class main extends Vue {
       let playlistSongs1: playlistSongs = {
         playlistName: playlist.name,
         playlistID: playlist.id,
-        songs: playlistItems1
+        songs: playlistItems1,
+        numberSongs: numberSongs
       };
       this.playlistSongsSelected.push(playlistSongs1);
-
+      console.log(playlist.name);
     }
   }
 
   SortTop(numberItems: number) {
+    // TODO: think there is a bug in here duplicating songs - for top 10 click etc
+    this.topSelectedSongsForMerge = [];
     spotify.getMyTopTracks({ 'limit': numberItems }).then(topSongs => {
       let topSongsArray = topSongs.items.sort(function (a, b) { return b.popularity - a.popularity });
 
-      console.log(topSongsArray);
       this.playlistSongsSelected.forEach(playlist => {
         playlist.songs.forEach(song => {
           if (topSongsArray.map(x => x.id).includes(song.songId) || topSongsArray.map(x => x.name).includes(song.song)) {
-            //this.topSelectedSongsForMerge.push(song);
+            this.topSelectedSongsForMerge.push(song);
             song.highlight = true;
           }
         })
       })
     });
+  }
+
+  CreateMergedPlaylist() {
+    spotify.createPlaylist(this.userID).then(createResponse => {
+      console.log(createResponse);
+    })
+  }
+
+  SortIndividualTop(numberItems: number, playlist: playlistSongs) {
+
+  }
+
+  SortGenre(playlist: playlistSongs) {
+
+  }
+
+  ShowOrHide() {
+    if (this.showMerged === true) {
+      this.showMerged = false;
+    } else {
+      this.showMerged = true;
+    }
+  }
+
+  ShowOrHideSongs() {
+    if (this.showSongs == true) {
+      this.showSongs = false;
+    } else {
+      this.showSongs = true;
+    }
   }
 
 }
@@ -243,6 +341,17 @@ export default class main extends Vue {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 /* The navigation menu links */
+.scrollStyle {
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+.scrollStyle::-webkit-scrollbar {
+  /* WebKit */
+  width: 0;
+  height: 0;
+}
+
 .sidenav li {
   padding-top: 15px;
   text-decoration: none;

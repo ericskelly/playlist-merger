@@ -1,7 +1,7 @@
 <template>
   <div class="centered">
-    <a href='http://127.0.0.1:5000/'>
-      <img style="cursor: pointer;" src="../../Images/log_in-desktop-large.png">
+    <a v-bind:href="URL">
+      <img style="cursor: pointer;" src="../../Images/log_in-desktop-large.png" />
     </a>
   </div>
 </template>
@@ -19,29 +19,30 @@ const spotify = new SpotifyWebApi();
 })
 export default class spotifyLogin extends Vue {
   private params: any;
+  private URL: string = process.env.VUE_APP_FLASK_API_URL;
   created() {
     this.params = this.getHashParams();
-    if (this.params.access_token){
+    if (this.params.access_token) {
       spotify.setAccessToken(this.params.access_token);
-      router.push('/');   
+      router.push('/');
     }
   }
-  
-  emitToMain (access_token:any){
+
+  emitToMain(access_token: any) {
     this.$emit('onLoginSend', access_token);
   }
 
-  getHashParams(){
+  getHashParams() {
     var hashParams = {} as any;
     var e, r = /([^&;=]+)=?([^&;]*)/g,
-        q = window.location.hash.substring(1)
-    while ( e = r.exec(q)) {
+      q = window.location.hash.substring(1)
+    while (e = r.exec(q)) {
       hashParams[e[1]] = decodeURIComponent(e[2]);
     }
     return hashParams;
   }
 
-  getStuff(){
+  getStuff() {
     spotify.getMe().then((response) => {
       console.log(response)
     })
@@ -51,24 +52,24 @@ export default class spotifyLogin extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .center-screen {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-  }
+.center-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
 
-  .centered {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    /* bring your own prefixes */
-    transform: translate(-50%, -50%);
-  }
+.centered {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  /* bring your own prefixes */
+  transform: translate(-50%, -50%);
+}
 </style>
