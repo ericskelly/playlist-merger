@@ -1,5 +1,10 @@
 <template>
   <div>
+    <link href="https://fonts.googleapis.com/css?family=Material+Icons" rel="stylesheet" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css"
+      rel="stylesheet"
+    />
     <nav class="navbar navbar-inverse navbar-fixed-top header">
       <a class="navbar-brand" style="color: #1DB954">Spotify Playlist Merger</a>
       <form class="form-inline">
@@ -61,26 +66,54 @@
                   >
                     <v-card-title>
                       <div style="display: flex; justify-content: space-between; width: 100%">
-                        <v-chip outlined>
-                          Merged Playlist
-                          <v-icon left>mdi-server-plus</v-icon>
-                        </v-chip>
-                        <v-btn @click="dialog=true">create</v-btn>
-                        <!--<v-dialog v-model="dialog" max-width="290">
-                          <v-card>
-                            <v-card-title class="headline">Use Google's location service?</v-card-title>
+                        <v-chip outlined>Merged Playlist</v-chip>
+                        <div data-app>
+                          <!--<v-btn color="primary" dark @click="dialog = true"></v-btn>-->
 
-                            <v-card-text>Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running.</v-card-text>
+                          <v-icon color="primary" dark v-on="on" @click="dialog = true">create</v-icon>
 
-                            <v-card-actions>
-                              <v-spacer></v-spacer>
+                          <v-dialog v-model="dialog" max-width="500">
+                            <v-card>
+                              <v-card-title class="headline">Create Playlist</v-card-title>
+                              <v-card-text>
+                                <v-container fluid>
+                                  <v-row>
+                                    <v-col cols="12">
+                                      <v-text-field id="nameField" label="Playlist Name*" required></v-text-field>
+                                    </v-col>
+                                    <v-col cols="12">
+                                      <v-text-field id="descriptionField" label="Description"></v-text-field>
+                                    </v-col>
+                                    <v-col>
+                                      <v-checkbox
+                                        v-model="newPlaylistPublic"
+                                        label="Public Playlist?"
+                                      ></v-checkbox>
+                                    </v-col>
+                                    <v-col>
+                                      <v-checkbox
+                                        v-model="newPlaylistCollaborative"
+                                        label="Collaborative Playlist?"
+                                      ></v-checkbox>
+                                    </v-col>
+                                  </v-row>
+                                </v-container>
+                                <small>*indicates required field</small>
+                              </v-card-text>
+                              <v-card-actions>
+                                <v-spacer></v-spacer>
 
-                              <v-btn color="green darken-1" text @click="dialog = false">Disagree</v-btn>
+                                <v-btn color="green darken-1" text @click="dialog = false">Cancel</v-btn>
 
-                              <v-btn color="green darken-1" text @click="dialog = false">Agree</v-btn>
-                            </v-card-actions>
-                          </v-card>
-                        </v-dialog>-->
+                                <v-btn
+                                  color="green darken-1"
+                                  text
+                                  @click="CreateMergedPlaylist()"
+                                >Create</v-btn>
+                              </v-card-actions>
+                            </v-card>
+                          </v-dialog>
+                        </div>
                       </div>
                     </v-card-title>
                     <v-divider></v-divider>
@@ -107,10 +140,7 @@
                   <v-card class="mx-auto" tile dark>
                     <v-card-title>
                       <div style="display: flex; justify-content: space-between; width: 100%">
-                        <v-chip outlined>
-                          {{playlistSongsSelected[index].playlistName}}
-                          <v-icon left>mdi-server-plus</v-icon>
-                        </v-chip>
+                        <v-chip outlined>{{playlistSongsSelected[index].playlistName}}</v-chip>
                         <div>
                           <b-dropdown id="dropdown-1" offset="-120px" size="sm" text class>
                             <b-dropdown-header id="dropdown-header-label1">Merge Options</b-dropdown-header>
@@ -176,6 +206,7 @@ interface playlistItem {
   song: string;
   artist: string;
   highlight: boolean;
+  uri: string;
 }
 
 @Component({
@@ -192,10 +223,21 @@ export default class main extends Vue {
   private showSongs: boolean = true;
   private userID: string = '';
   private dialog: boolean = false;
+  private newPlaylistPublic: boolean = true;
+  private newPlaylistCollaborative: boolean = false;
   created() {
     spotify.getMe().then(user => {
       this.userID = user.id;
     })
+    this.LoadPlaylists();
+  }
+
+  LoadPlaylists() {
+    this.playlists = [];
+    this.selected = [];
+    this.playlistSongsSelected = [];
+    this.playlistsLoaded = false;
+    this.playlistCount = 0;
     spotify.getUserPlaylists().then(
       response => {
         response.items.forEach(playlist => {
@@ -256,6 +298,7 @@ export default class main extends Vue {
       let numberSongs = 0;
       Promise.all(promiseArray).then(setOfTracks => {
         setOfTracks.forEach(set => {
+          console.log(set);
           set.items.forEach(item => {
             let artistsTemp: string = "";
             let artists: string = "";
@@ -269,6 +312,7 @@ export default class main extends Vue {
               song: item.track.name,
               artist: artists,
               songId: item.track.id,
+              uri: item.track.uri,
               highlight: false
             };
             playlistItems1.push(playlistItem1);
@@ -297,8 +341,10 @@ export default class main extends Vue {
       this.playlistSongsSelected.forEach(playlist => {
         playlist.songs.forEach(song => {
           if (topSongsArray.map(x => x.id).includes(song.songId) || topSongsArray.map(x => x.name).includes(song.song)) {
-            this.topSelectedSongsForMerge.push(song);
-            song.highlight = true;
+            if (!this.topSelectedSongsForMerge.map(x => x.songId).includes(song.songId)) {
+              this.topSelectedSongsForMerge.push(song);
+              song.highlight = true;
+            }
           }
         })
       })
@@ -306,9 +352,18 @@ export default class main extends Vue {
   }
 
   CreateMergedPlaylist() {
-    spotify.createPlaylist(this.userID).then(createResponse => {
+    this.dialog = false;
+    let newPlaylistName = (<HTMLInputElement>document.getElementById("nameField")).value;
+    let newPlaylistDescription = (<HTMLInputElement>document.getElementById("descriptionField")).value;
+    spotify.createPlaylist(this.userID, { 'name': newPlaylistName, 'description': newPlaylistDescription, 'public': this.newPlaylistPublic, 'collaborative': this.newPlaylistCollaborative }).then(createResponse => {
       console.log(createResponse);
-    })
+      let newPlaylistId = createResponse.id;
+      let songsToAdd = this.topSelectedSongsForMerge.map(x => x.uri);
+      spotify.addTracksToPlaylist(newPlaylistId, songsToAdd).then(addSongsResponse => {
+        console.log(addSongsResponse);
+        this.LoadPlaylists();
+      });
+    });
   }
 
   SortIndividualTop(numberItems: number, playlist: playlistSongs) {
