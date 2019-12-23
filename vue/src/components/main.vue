@@ -196,7 +196,7 @@ interface playlist {
 
 interface playlistSongs {
   playlistName: string;
-  playlistID: number;
+  playlistID: string;
   songs: playlistItem[];
   numberSongs: number;
 }
@@ -207,6 +207,17 @@ interface playlistItem {
   artist: string;
   highlight: boolean;
   uri: string;
+}
+
+interface playlistGenres {
+  playlistID: string;
+  genres: artistGenres[];
+}
+
+interface artistGenres {
+  artistName: string;
+  artistId: string;
+  genres: string[];
 }
 
 @Component({
@@ -225,6 +236,7 @@ export default class main extends Vue {
   private dialog: boolean = false;
   private newPlaylistPublic: boolean = true;
   private newPlaylistCollaborative: boolean = false;
+  private playlistGenresList: playlistGenres[] = [];
   created() {
     spotify.getMe().then(user => {
       this.userID = user.id;
@@ -294,16 +306,18 @@ export default class main extends Vue {
         promiseArray.push(promise);
         offset += 100;
       }
-
+      let artistIds: string[] = [];
       let numberSongs = 0;
       Promise.all(promiseArray).then(setOfTracks => {
         setOfTracks.forEach(set => {
-          console.log(set);
           set.items.forEach(item => {
             let artistsTemp: string = "";
             let artists: string = "";
             item.track.artists.forEach(artist => {
               artistsTemp = artistsTemp + artist.name + ", ";
+              if (artist.id != null && !artistIds.includes(artist.id)) {
+                artistIds.push(artist.id);
+              }
             });
             if (artistsTemp.length > 0) {
               artists = artistsTemp.substring(0, artistsTemp.length - 2);
@@ -319,7 +333,7 @@ export default class main extends Vue {
             numberSongs += 1;
           });
         });
-      });
+      }).then(() => this.GetArtistGenres(artistIds, playlist.id));
 
       let playlistSongs1: playlistSongs = {
         playlistName: playlist.name,
@@ -330,6 +344,51 @@ export default class main extends Vue {
       this.playlistSongsSelected.push(playlistSongs1);
       console.log(playlist.name);
     }
+  }
+
+  SortGenre(playlist: playlistSongs) {
+
+  }
+
+  GetArtistGenres(artistIds: string[], playlistId: string) {
+    let numberIds = Math.ceil(artistIds.length)
+    let numberCalls = numberIds / 50;
+    let promiseArray = [];
+    let offset = 0;
+    for (let i = 0; i < numberCalls; ++i) {
+      let partitionedArtistIds = artistIds.slice(offset, offset + 50);
+      offset += 50;
+      let promise = spotify.getArtists(partitionedArtistIds);
+      promiseArray.push(promise);
+    }
+    let genres: string[] = [];
+    let artistGenres1: artistGenres[] = [];
+    Promise.all(promiseArray).then(setOfArtistResponses => {
+      setOfArtistResponses.forEach(artistsResponse => {
+        artistsResponse.artists.forEach(artist => {
+          genres = [];
+          artist.genres.forEach(genre => {
+            genres.push(genre);
+          });
+          let artistGenre1: artistGenres = {
+            artistName: artist.name,
+            artistId: artist.id,
+            genres: genres
+          };
+          artistGenres1.push(artistGenre1);
+        });
+      })
+    }).then(() => this.SetPlaylistGenres(artistGenres1, playlistId))
+  }
+
+  SetPlaylistGenres(artistGenres: artistGenres[], playlistId: string) {
+    // TODO: Create functionality to have a auto complete genre search that will search for genres then sort songs with artists that match the genre
+    let playlistGenres1: playlistGenres = {
+      playlistID: playlistId,
+      genres: artistGenres
+    };
+    this.playlistGenresList.push(playlistGenres1);
+    console.log(this.playlistGenresList);
   }
 
   SortTop(numberItems: number) {
@@ -367,10 +426,6 @@ export default class main extends Vue {
   }
 
   SortIndividualTop(numberItems: number, playlist: playlistSongs) {
-
-  }
-
-  SortGenre(playlist: playlistSongs) {
 
   }
 
