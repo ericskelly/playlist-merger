@@ -11,6 +11,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import axios from 'axios';
 import SpotifyWebApi from 'spotify-web-api-js';
 import router from '../router';
+declare var process: any;
 
 const spotify = new SpotifyWebApi();
 
