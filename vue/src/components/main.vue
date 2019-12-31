@@ -146,11 +146,38 @@
                             <b-dropdown-header id="dropdown-header-label1">Merge Options</b-dropdown-header>
                             <b-dropdown-divider></b-dropdown-divider>
                             <b-dropdown-header id="dropdown-header-label1">Top Songs</b-dropdown-header>
-                            <b-dropdown-item @click="SortTop(5)">Top 5</b-dropdown-item>
+                            <b-dropdown-item @click="SortTop(5)" style="min-width:250px">Top 5</b-dropdown-item>
 
                             <b-dropdown-item @click="SortTop(10)">Top 10</b-dropdown-item>
                             <b-dropdown-item @click="SortTop(50)">Top 50</b-dropdown-item>
-                            <b-dropdown-header id="dropdown-header-label2">Genre</b-dropdown-header>
+                            <b-dropdown-divider></b-dropdown-divider>
+                            <b-dropdown-form>
+                              <b-form-group
+                                label="Genre"
+                                label-for="dropdown-form-genre"
+                                @submit.stop.prevent
+                              >
+                                <b-form-input
+                                  v-bind:id="playlist.playlistID"
+                                  list="options-list"
+                                  size="sm"
+                                  @input="SearchPlaylistGenre(playlistSongsSelected[index].playlistID)"
+                                  @focus="SetPlaylistSearchGenres(playlistSongsSelected[index].playlistID)"
+                                  placeholder="Enter Genre"
+                                ></b-form-input>
+                                <b-form-datalist
+                                  v-if="readyToSort"
+                                  id="options-list"
+                                  v-bind:options="currentFocusedGenresSearch"
+                                ></b-form-datalist>
+                              </b-form-group>
+
+                              <b-button
+                                variant="primary"
+                                size="sm"
+                                @click="OnGenreSelect(playlist.playlistID)"
+                              >Merge</b-button>
+                            </b-dropdown-form>
                           </b-dropdown>
                         </div>
                       </div>
@@ -186,6 +213,7 @@ import { Prop, Vue } from "vue-property-decorator";
 import Component from "vue-class-component";
 import SpotifyWebApi from "spotify-web-api-js";
 import router from "../router";
+import { BDropdown } from 'bootstrap-vue';
 
 const spotify = new SpotifyWebApi();
 
@@ -232,19 +260,21 @@ export default class main extends Vue {
   private showMerged: boolean = true;
   private playlistsLoaded: boolean = false;
   private showSongs: boolean = true;
-  private userID: string = '';
+  private userID: string = "";
   private dialog: boolean = false;
   private newPlaylistPublic: boolean = true;
   private newPlaylistCollaborative: boolean = false;
   private playlistGenresList: playlistGenres[] = [];
-  created() {
+  private currentFocusedGenresSearch: string[] = [];
+  private readyToSort: boolean = false;
+  public created() {
     spotify.getMe().then(user => {
       this.userID = user.id;
-    })
+    });
     this.LoadPlaylists();
   }
 
-  LoadPlaylists() {
+  public LoadPlaylists() {
     this.playlists = [];
     this.selected = [];
     this.playlistSongsSelected = [];
@@ -253,9 +283,12 @@ export default class main extends Vue {
     spotify.getUserPlaylists().then(
       response => {
         response.items.forEach(playlist => {
-          let playlist1: playlist = { name: playlist.name, id: playlist.id };
+          const playlist1: playlist = {
+            name: playlist.name,
+            id: playlist.id
+          };
           this.playlists.push(playlist1);
-          //this.OpenPlayList(playlist1);
+          // this.OpenPlayList(playlist1);
           this.selected.push(this.playlistCount);
           this.playlistCount += 1;
         });
@@ -266,103 +299,143 @@ export default class main extends Vue {
           router.push("/login");
         }
       }
-    ).then(() => this.OpenPlayLists());
+    )
+      .then(() => this.OpenPlayLists());
   }
 
-  OpenPlayLists() {
-    let promiseArray: any = [];
+  public OpenPlayLists() {
+    const promiseArray: any = [];
     this.playlists.forEach(playlist => {
-      let promise = spotify.getPlaylist(playlist.id);
+      const promise = spotify.getPlaylist(playlist.id);
       promiseArray.push(promise);
     });
-    Promise.all(promiseArray).then(playlists => {
-      playlists.forEach(playlist => {
-        this.ParsePlaylist(playlist);
+    Promise.all(promiseArray)
+      .then(playlists => {
+        playlists.forEach(playlist => {
+          this.ParsePlaylist(playlist);
+        });
       })
-    }).then(() => this.playlistsLoaded = true);
+      .then(() => (this.playlistsLoaded = true));
   }
 
-  OpenPlayList(aplayList: playlist) {
+  public OpenPlayList(aplayList: playlist) {
     spotify.getPlaylist(aplayList.id).then(response => {
       this.ParsePlaylist(response);
     });
   }
 
-  ParsePlaylist(playlist: any) {
-    let playlistIndex: number = this.playlistSongsSelected
+  public ParsePlaylist(playlist: any) {
+    const playlistIndex: number = this.playlistSongsSelected
       .map(x => x.playlistID)
       .indexOf(playlist.id);
-    if (this.playlistSongsSelected.map(x => x.playlistID).includes(playlist.id)) {
+    if (
+      this.playlistSongsSelected.map(x => x.playlistID).includes(playlist.id)
+    ) {
       this.playlistSongsSelected.splice(playlistIndex, 1);
     } else {
-      let totalPlayListSongs: number = playlist.tracks.total;
-      let playlistItems1: playlistItem[] = [];
+      const totalPlayListSongs: number = playlist.tracks.total;
+      const playlistItems1: playlistItem[] = [];
 
-      let numberCalls = Math.ceil(totalPlayListSongs / 100);
-      let promiseArray = [];
+      const numberCalls = Math.ceil(totalPlayListSongs / 100);
+      const promiseArray = [];
       let offset = 0;
       for (let i = 0; i < numberCalls; ++i) {
-        let promise = spotify.getPlaylistTracks(playlist.id, { 'limit': 100, 'offset': offset })
+        const promise = spotify.getPlaylistTracks(playlist.id, {
+          limit: 100,
+          offset
+        });
         promiseArray.push(promise);
         offset += 100;
       }
-      let artistIds: string[] = [];
+      const artistIds: string[] = [];
       let numberSongs = 0;
-      Promise.all(promiseArray).then(setOfTracks => {
-        setOfTracks.forEach(set => {
-          set.items.forEach(item => {
-            let artistsTemp: string = "";
-            let artists: string = "";
-            item.track.artists.forEach(artist => {
-              artistsTemp = artistsTemp + artist.name + ", ";
-              if (artist.id != null && !artistIds.includes(artist.id)) {
-                artistIds.push(artist.id);
+      Promise.all(promiseArray)
+        .then(setOfTracks => {
+          setOfTracks.forEach(set => {
+            set.items.forEach(item => {
+              let artistsTemp: string = "";
+              let artists: string = "";
+              item.track.artists.forEach(artist => {
+                artistsTemp = artistsTemp + artist.name + ", ";
+                if (artist.id != null && !artistIds.includes(artist.id)) {
+                  artistIds.push(artist.id);
+                }
+              });
+              if (artistsTemp.length > 0) {
+                artists = artistsTemp.substring(0, artistsTemp.length - 2);
               }
+              const playlistItem1: playlistItem = {
+                song: item.track.name,
+                artist: artists,
+                songId: item.track.id,
+                uri: item.track.uri,
+                highlight: false
+              };
+              playlistItems1.push(playlistItem1);
+              numberSongs += 1;
             });
-            if (artistsTemp.length > 0) {
-              artists = artistsTemp.substring(0, artistsTemp.length - 2);
-            }
-            let playlistItem1: playlistItem = {
-              song: item.track.name,
-              artist: artists,
-              songId: item.track.id,
-              uri: item.track.uri,
-              highlight: false
-            };
-            playlistItems1.push(playlistItem1);
-            numberSongs += 1;
           });
-        });
-      }).then(() => this.GetArtistGenres(artistIds, playlist.id));
+        }).then(() => this.GetArtistGenres(artistIds, playlist.id));
 
-      let playlistSongs1: playlistSongs = {
+      const playlistSongs1: playlistSongs = {
         playlistName: playlist.name,
         playlistID: playlist.id,
         songs: playlistItems1,
-        numberSongs: numberSongs
+        numberSongs
       };
       this.playlistSongsSelected.push(playlistSongs1);
-      console.log(playlist.name);
     }
   }
 
-  SortGenre(playlist: playlistSongs) {
-
+  public SearchPlaylistGenre(playlistID: string) {
+    if (this.readyToSort == false) {
+      this.SetPlaylistSearchGenres(playlistID);
+    }
+    this.readyToSort = true;
   }
 
-  GetArtistGenres(artistIds: string[], playlistId: string) {
-    let numberIds = Math.ceil(artistIds.length)
-    let numberCalls = numberIds / 50;
-    let promiseArray = [];
+  public SetPlaylistSearchGenres(playlistID: string) {
+    this.currentFocusedGenresSearch = [];
+    console.log(playlistID);
+    //let playlistGenreIndex = this.playlistGenresList.findIndex(x => x.playlistID == playlistID);
+    let playlistGenres = this.playlistGenresList[this.playlistGenresList.findIndex(x => x.playlistID == playlistID)];
+    playlistGenres.genres.forEach((genres: artistGenres) => {
+      genres.genres.forEach((genre: string) => {
+        if (!this.currentFocusedGenresSearch.includes(genre)) {
+          this.currentFocusedGenresSearch.push(genre);
+        }
+      })
+    });
+  }
+
+  public OnGenreSelect(playlistID: string) {
+    const dropdown = this.$refs.dropdown as BDropdown;
+    dropdown.hide(true);
+
+    const selectedGenre = (document.getElementById(playlistID) as HTMLInputElement).value;
+    let playlistGenres = this.playlistGenresList[this.playlistGenresList.findIndex(x => x.playlistID == playlistID)];
+    playlistGenres.genres.forEach((genres: artistGenres) => {
+      genres.genres.forEach((genre: string) => {
+        if (!this.currentFocusedGenresSearch.includes(genre)) {
+          this.currentFocusedGenresSearch.push(genre);
+        }
+      })
+    });
+  }
+
+  public GetArtistGenres(artistIds: string[], playlistId: string) {
+    const numberIds = Math.ceil(artistIds.length);
+    const numberCalls = numberIds / 50;
+    const promiseArray = [];
     let offset = 0;
     for (let i = 0; i < numberCalls; ++i) {
-      let partitionedArtistIds = artistIds.slice(offset, offset + 50);
+      const partitionedArtistIds = artistIds.slice(offset, offset + 50);
       offset += 50;
-      let promise = spotify.getArtists(partitionedArtistIds);
+      const promise = spotify.getArtists(partitionedArtistIds);
       promiseArray.push(promise);
     }
     let genres: string[] = [];
-    let artistGenres1: artistGenres[] = [];
+    const artistGenres1: artistGenres[] = [];
     Promise.all(promiseArray).then(setOfArtistResponses => {
       setOfArtistResponses.forEach(artistsResponse => {
         artistsResponse.artists.forEach(artist => {
@@ -370,20 +443,19 @@ export default class main extends Vue {
           artist.genres.forEach(genre => {
             genres.push(genre);
           });
-          let artistGenre1: artistGenres = {
+          const artistGenre1: artistGenres = {
             artistName: artist.name,
             artistId: artist.id,
             genres: genres
           };
           artistGenres1.push(artistGenre1);
         });
-      })
-    }).then(() => this.SetPlaylistGenres(artistGenres1, playlistId))
+      });
+    }).then(() => this.SetPlaylistGenres(artistGenres1, playlistId));
   }
 
-  SetPlaylistGenres(artistGenres: artistGenres[], playlistId: string) {
-    // TODO: Create functionality to have a auto complete genre search that will search for genres then sort songs with artists that match the genre
-    let playlistGenres1: playlistGenres = {
+  public SetPlaylistGenres(artistGenres: artistGenres[], playlistId: string) {
+    const playlistGenres1: playlistGenres = {
       playlistID: playlistId,
       genres: artistGenres
     };
@@ -391,33 +463,43 @@ export default class main extends Vue {
     console.log(this.playlistGenresList);
   }
 
-  SortTop(numberItems: number) {
-    // TODO: think there is a bug in here duplicating songs - for top 10 click etc
+  public SortTop(numberItems: number) {
     this.topSelectedSongsForMerge = [];
-    spotify.getMyTopTracks({ 'limit': numberItems }).then(topSongs => {
-      let topSongsArray = topSongs.items.sort(function (a, b) { return b.popularity - a.popularity });
+    spotify.getMyTopTracks({ limit: numberItems }).then(topSongs => {
+      const topSongsArray = topSongs.items.sort(function (a, b) {
+        return b.popularity - a.popularity;
+      });
 
       this.playlistSongsSelected.forEach(playlist => {
         playlist.songs.forEach(song => {
-          if (topSongsArray.map(x => x.id).includes(song.songId) || topSongsArray.map(x => x.name).includes(song.song)) {
-            if (!this.topSelectedSongsForMerge.map(x => x.songId).includes(song.songId)) {
+          if (
+            topSongsArray.map(x => x.id).includes(song.songId) ||
+            topSongsArray.map(x => x.name).includes(song.song)
+          ) {
+            if (!this.topSelectedSongsForMerge.map(x => x.songId).includes(song.songId)
+            ) {
               this.topSelectedSongsForMerge.push(song);
               song.highlight = true;
             }
           }
-        })
-      })
+        });
+      });
     });
   }
 
-  CreateMergedPlaylist() {
+  public CreateMergedPlaylist() {
     this.dialog = false;
-    let newPlaylistName = (<HTMLInputElement>document.getElementById("nameField")).value;
-    let newPlaylistDescription = (<HTMLInputElement>document.getElementById("descriptionField")).value;
-    spotify.createPlaylist(this.userID, { 'name': newPlaylistName, 'description': newPlaylistDescription, 'public': this.newPlaylistPublic, 'collaborative': this.newPlaylistCollaborative }).then(createResponse => {
+    const newPlaylistName = (document.getElementById("nameField") as HTMLInputElement).value;
+    const newPlaylistDescription = (document.getElementById("descriptionField") as HTMLInputElement).value;
+    spotify.createPlaylist(this.userID, {
+      name: newPlaylistName,
+      description: newPlaylistDescription,
+      public: this.newPlaylistPublic,
+      collaborative: this.newPlaylistCollaborative
+    }).then(createResponse => {
       console.log(createResponse);
-      let newPlaylistId = createResponse.id;
-      let songsToAdd = this.topSelectedSongsForMerge.map(x => x.uri);
+      const newPlaylistId = createResponse.id;
+      const songsToAdd = this.topSelectedSongsForMerge.map(x => x.uri);
       spotify.addTracksToPlaylist(newPlaylistId, songsToAdd).then(addSongsResponse => {
         console.log(addSongsResponse);
         this.LoadPlaylists();
@@ -425,11 +507,9 @@ export default class main extends Vue {
     });
   }
 
-  SortIndividualTop(numberItems: number, playlist: playlistSongs) {
+  public SortIndividualTop(numberItems: number, playlist: playlistSongs) { }
 
-  }
-
-  ShowOrHide() {
+  public ShowOrHide() {
     if (this.showMerged === true) {
       this.showMerged = false;
     } else {
@@ -437,14 +517,13 @@ export default class main extends Vue {
     }
   }
 
-  ShowOrHideSongs() {
+  public ShowOrHideSongs() {
     if (this.showSongs == true) {
       this.showSongs = false;
     } else {
       this.showSongs = true;
     }
   }
-
 }
 </script>
 

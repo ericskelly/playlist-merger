@@ -43,11 +43,6 @@ export default class spotifyLogin extends Vue {
     return hashParams;
   }
 
-  getStuff() {
-    spotify.getMe().then((response) => {
-      console.log(response)
-    })
-  }
 }
 </script>
 
