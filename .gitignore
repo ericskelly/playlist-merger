@@ -2,3 +2,5 @@ node_modules/**
 env
 .spotipyoauthcache
 .vscode
+config.py
+__pycache__

@@ -2,21 +2,25 @@ from flask import Flask,jsonify,request,redirect,json
 from flask_cors import CORS
 import spotipy
 from spotipy import oauth2
+import os
 
-DEBUG = True
+#DEBUG = True
 
+ENV = os.environ.get("SPOTIFY_SETTINGS")
 app = Flask(__name__)
-app.config.from_object(__name__)
+app.config.from_object(ENV) 
 
 CORS(app)
 
-SPOTIPY_CLIENT_ID='eda0f7945ae544ebad38c981ace7d987'
-SPOTIPY_CLIENT_SECRET='60a9212acff644afbe79e56eaa0b7164'
-#SPOTIPY_REDIRECT_URI='http://ericwebserver.eastus.cloudapp.azure.com:8080/'
-SPOTIPY_REDIRECT_URI='http://127.0.0.1:5000/'
-SCOPE = 'user-library-read user-library-modify user-read-private user-top-read playlist-modify-public playlist-modify-private'
+DEBUG = app.config['DEBUG']
+SPOTIPY_CLIENT_ID = app.config['SPOTIPY_CLIENT_ID']
+SPOTIPY_CLIENT_SECRET = app.config['SPOTIPY_CLIENT_SECRET']
+SPOTIPY_REDIRECT_URI = app.config['SPOTIPY_REDIRECT_URI']
+CLIENT_REDIRECT_URL = app.config['CLIENT_REDIRECT_URL']
+SCOPE = 'user-library-read user-library-modify user-read-private user-top-read playlist-modify-public playlist-modify-private playlist-read-private'
 CACHE = '.spotipyoauthcache'
 
+print(SPOTIPY_CLIENT_ID)
 sp_oauth = spotipy.oauth2.SpotifyOAuth(SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI,scope=SCOPE, cache_path=CACHE)
 
 @app.route('/', methods=['GET'])
@@ -36,7 +40,8 @@ def login():
 
     if access_token:
         #return redirect('http://ericwebserver.eastus.cloudapp.azure.com:8008/login/#access_token=' + access_token)
-        return redirect('http://localhost:8080/login/#access_token=' + access_token)
+        #return redirect('http://localhost:8080/login/#access_token=' + access_token)
+        return redirect(CLIENT_REDIRECT_URL + access_token)      
     else:
         return htmlForLoginButton()
 
