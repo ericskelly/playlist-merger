@@ -35,8 +35,8 @@
         <div class="col" style="background-color: #353535">
           <section>
             <div class="container" v-if="playlistsLoaded">
-              <div style="border: 1px solid #1DB954">
-                <v-row>
+              <div style="border: 1px solid #1DB954; height: 100px">
+                <!--<v-row>
                   <v-col v-if="selectedSongsForMerge.length > 0" :justify="start">
                     <v-btn @click="ShowOrHide()">Merged Playlist</v-btn>
                   </v-col>
@@ -52,7 +52,18 @@
                     </b-dropdown>
                   </v-col>
                   <v-col></v-col>
-                </v-row>
+                </v-row>-->
+                <v-col cols="12">
+                  <v-row justify="center">
+                    <v-col>
+                      <v-select label="Top Songs"></v-select>
+                    </v-col>
+                    <v-col>
+                      <v-select label="Align"></v-select>
+                    </v-col>
+                    <v-col></v-col>
+                  </v-row>
+                </v-col>
               </div>
               <v-row v-if="columns != -1">
                 <v-col :cols="3" v-if="selectedSongsForMerge.length > 0">
@@ -116,6 +127,9 @@
                         </div>
                       </div>
                     </v-card-title>
+                    <v-card-subtitle style="float: right">
+                      <v-icon v-on="on" @click="UndoLastMerge()">undo</v-icon>
+                    </v-card-subtitle>
                     <v-divider></v-divider>
                     <v-list class="scrollStyle" max-height="500px">
                       <v-list-item
@@ -142,7 +156,18 @@
                       <div style="display: flex; justify-content: space-between; width: 100%">
                         <v-chip outlined>{{playlistSongsSelected[index].playlistName}}</v-chip>
                         <div>
-                          <b-dropdown id="dropdown-1" offset="-120px" size="sm" text class>
+                          <b-dropdown
+                            id="dropdown-1"
+                            offset="-120px"
+                            size="sm"
+                            text
+                            class
+                            no-caret
+                            variant="transparent"
+                          >
+                            <template v-slot:button-content>
+                              <v-icon>settings</v-icon>
+                            </template>
                             <b-dropdown-header id="dropdown-header-label1">Merge Options</b-dropdown-header>
                             <b-dropdown-divider></b-dropdown-divider>
                             <b-dropdown-header id="dropdown-header-label1">Top Songs</b-dropdown-header>
@@ -521,6 +546,10 @@ export default class main extends Vue {
   }
 
   public SortIndividualTop(numberItems: number, playlist: playlistSongs) { }
+
+  public UndoLastMerge() {
+
+  }
 
   public ShowOrHide() {
     if (this.showMerged === true) {

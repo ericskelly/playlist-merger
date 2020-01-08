@@ -43,7 +43,8 @@ def login():
         #return redirect('http://localhost:8080/login/#access_token=' + access_token)
         return redirect(CLIENT_REDIRECT_URL + access_token)      
     else:
-        return htmlForLoginButton()
+        #return htmlForLoginButton()
+        return redirect(sp_oauth.get_authorize_url())
 
 def htmlForLoginButton():
     auth_url = getSPOauthURI()
