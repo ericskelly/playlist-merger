@@ -170,13 +170,13 @@
                             </template>
                             <b-dropdown-header id="dropdown-header-label1">Merge Options</b-dropdown-header>
                             <b-dropdown-divider></b-dropdown-divider>
-                            <b-dropdown-header id="dropdown-header-label1">Top Songs</b-dropdown-header>
+                            <b-dropdown-header id="dropdown-header-label1">Popular Songs</b-dropdown-header>
                             <b-dropdown-item
-                              @click="SortIndividualTop(5, playlistSongsSelected[index])" style="min-width:250px">Top 5</b-dropdown-item>
+                              @click="SortMostPopular(5, playlistSongsSelected[index])" style="min-width:250px">Top 5</b-dropdown-item>
                             <b-dropdown-item
-                              @click="SortIndividualTop(10, playlistSongsSelected[index])">Top 10</b-dropdown-item>
+                              @click="SortMostPopular(10, playlistSongsSelected[index])">Top 10</b-dropdown-item>
                             <b-dropdown-item
-                              @click="SortIndividualTop(50, playlistSongsSelected[index])">Top 50</b-dropdown-item>
+                              @click="SortMostPopular(50, playlistSongsSelected[index])">Top 50</b-dropdown-item>
                             <b-dropdown-divider></b-dropdown-divider>
                             <b-dropdown-form>
                               <b-form-group
@@ -260,6 +260,7 @@ interface playlistItem {
   songId: string;
   song: string;
   artist: string;
+  globalPopularity: number;
   highlight: boolean;
   uri: string;
 }
@@ -372,7 +373,7 @@ export default class main extends Vue {
       for (let i = 0; i < numberCalls; ++i) {
         const promise = spotify.getPlaylistTracks(playlist.id, {
           limit: 100,
-          offset
+          offset: offset
         });
         promiseArray.push(promise);
         offset += 100;
@@ -398,12 +399,12 @@ export default class main extends Vue {
                 song: item.track.name,
                 artist: artists,
                 songId: item.track.id,
+                globalPopularity: item.track.popularity,
                 uri: item.track.uri,
                 highlight: false
               };
               playlistItems1.push(playlistItem1);
               numberSongs += 1;
-              console.log(numberSongs);
             });
           });
           const playlistSongs1: playlistSongs = {
@@ -553,45 +554,18 @@ export default class main extends Vue {
     });
   }
 
-  public SortIndividualTop(numberItems: number, playlist: playlistSongs) {
-    this.selectedSongsForMerge = [];
-    let totalSongs = this.playlistSongsSelected.map(x => x.numberSongs).reduce((total: number, currentValue: number) => total + currentValue);
-    const numberCallsToMake = totalSongs / 50;
-    let promiseArray = [];
-    let offsetNum = 0;
-    let topSongsArrayOrdered: any[] = [];
-    for (let i = 0; i < numberCallsToMake; ++i) {
-      const promise = spotify.getMyTopTracks({ limit: numberItems, offset: offsetNum });
-      offsetNum += 50;
-      promiseArray.push(promise);
+  public SortMostPopular(numberItems: number, playlist: playlistSongs) {
+    //let newPlaylist: playlistSongs[] = [];
+    //let newPlaylist: playlistSongs = Object.create(playlist);
+    let playlistSongs: playlistItem[] = Object.create(playlist.songs);
+    let mostPopularOrdered: playlistItem[] = playlistSongs.sort(function (a: playlistItem, b: playlistItem) { return b.globalPopularity - a.globalPopularity });
+    for (let i = 0; i < numberItems; ++i) {
+      if (!this.selectedSongsForMerge.map(x => x.songId).includes(mostPopularOrdered[i].songId)
+      ) {
+        this.selectedSongsForMerge.push(mostPopularOrdered[i]);
+        mostPopularOrdered[i].highlight = true;
+      }
     }
-    Promise.all(promiseArray).then(setOfTopSongs => {
-      setOfTopSongs.forEach(topSongsSet => {
-        topSongsArrayOrdered.push(topSongsSet.items);
-      });
-      topSongsArrayOrdered = topSongsArrayOrdered.sort(function (a, b) {
-        return b.popularity - a.popularity
-      });
-      let songsAdded = 0;
-      let topSongsFromPlaylist: topSongsPerPlaylist[] = [];
-
-      playlist.songs.forEach(song => {
-        if (
-          topSongsArrayOrdered.map(x => x.id).includes(song.songId) ||
-          topSongsArrayOrdered.map(x => x.name).includes(song.song)
-        ) {
-          let topSongArrayIndex = topSongsArrayOrdered.map(x => x.songId).indexOf(song.songId) || topSongsArrayOrdered.map(x => x.name).indexOf(song.song);
-          topSongsFromPlaylist.push({ songFromPlaylist: song, popularity: topSongsArrayOrdered[topSongArrayIndex].popularity });
-          /*if (!this.selectedSongsForMerge.map(x => x.songId).includes(song.songId)
-          ) {
-            this.selectedSongsForMerge.push(song);
-            song.highlight = true;
-          }*/
-        }
-        songsAdded++;
-      });
-      //TODO: Sort topSongsFromPlaylist and grab the top numberItems from that
-    });
 
   }
 
