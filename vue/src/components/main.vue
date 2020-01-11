@@ -5,7 +5,7 @@
 			href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css"
 			rel="stylesheet"
 		/>
-		<nav class="navbar navbar-inverse navbar-fixed-top header">
+		<nav class="topNav navbar navbar-inverse navbar-fixed-top header">
 			<a class="navbar-brand" style="color: #1DB954">Spotify Playlist Merger</a>
 			<form class="form-inline">
 				<input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" />
@@ -14,7 +14,14 @@
 		</nav>
 		<div class="container-fluid">
 			<div class="row">
-				<v-card dark class="mx-auto" max-width="500" tile width="300" style="min-height: 100vh;">
+				<v-card
+					dark
+					class="mx-auto"
+					max-width="500"
+					tile
+					width="300"
+					style="height: 100%; position: fixed; top: 55px;"
+				>
 					<v-list rounded style="background-color">
 						<v-subheader>Playlists</v-subheader>
 						<v-list-item-group multiple v-model="selected" style="text-align: left">
@@ -32,7 +39,10 @@
 						</v-list-item-group>
 					</v-list>
 				</v-card>
-				<div class="col" style="background-color: #353535">
+				<div
+					class="col"
+					style="background-color: #353535; min-height: 100vh; height:auto; margin-left: 300px; margin-top: 55px"
+				>
 					<section>
 						<div class="container" v-if="playlistsLoaded">
 							<div style="border: 1px solid #1DB954; height: 100px">
@@ -90,7 +100,7 @@
 								</v-col>
 							</div>
 							<v-row v-if="columns != -1">
-								<v-col :cols="3" v-if="selectedSongsForMerge.length > 0">
+								<v-col :cols="3" v-if="selectedSongsForMergeStack.playlistSongsSelectDisplay.length > 0">
 									<v-card
 										style="border: 1px solid #1DB954"
 										shaped
@@ -148,7 +158,7 @@
 										<v-list class="scrollStyle" max-height="500px">
 											<v-list-item
 												two-line
-												v-for="songs in selectedSongsForMerge"
+												v-for="songs in selectedSongsForMergeStack.playlistSongsSelectDisplay"
 												v-bind:key="songs.song"
 												style="text-align: left; max-height: 50px"
 											>
@@ -311,6 +321,42 @@ interface topSongsPerPlaylist {
 	popularity: number;
 }
 
+class selectedSongsForMergeHistoryStack {
+	playlistSongsSelectDisplay: playlistItem[];
+	playlistSongsSelectList: Array<playlistItem[]>;
+	//isEmpty: boolean = this.playlistSongsSelectList.pop() == undefined;
+
+	constructor() {
+		this.playlistSongsSelectList = new Array<playlistItem[]>();
+		this.playlistSongsSelectDisplay = [];
+	}
+
+	public IsEmpty() {
+		return this.playlistSongsSelectList.length == undefined || this.playlistSongsSelectList.length == 0;
+	}
+
+	public PushPlaylistItem(playlistitem: playlistItem[]) {
+		if (this.GetTopPlaylistItem() == undefined) {
+			this.playlistSongsSelectList.push(playlistitem);
+		} else {
+			this.playlistSongsSelectList.push(this.GetTopPlaylistItem().concat(playlistitem));
+		}
+	}
+
+	public GetTopPlaylistItem(): playlistItem[] {
+		return this.playlistSongsSelectList[this.playlistSongsSelectList.length - 1];
+	}
+
+	public GetLength(): number {
+		return this.playlistSongsSelectList.length;
+	}
+
+	public PopPlaylistItem() {
+		this.playlistSongsSelectList.pop();
+	}
+
+}
+
 @Component({
 	components: {}
 })
@@ -321,7 +367,7 @@ export default class main extends Vue {
 	private playlists: playlist[] = [];
 	private playlistSongsSelected: playlistSongs[] = [];
 	private selected: number[] = [];
-	private selectedSongsForMerge: playlistItem[] = [];
+	//private selectedSongsForMerge: playlistItem[] = [];
 	private playlistCount: number = 0;
 	private showMerged: boolean = true;
 	private playlistsLoaded: boolean = false;
@@ -335,7 +381,7 @@ export default class main extends Vue {
 	private globalUniqueGenres: string[] = [];
 	private readyToSort: boolean = false;
 	private totalSongs: number = 0;
-
+	private selectedSongsForMergeStack: selectedSongsForMergeHistoryStack = new selectedSongsForMergeHistoryStack();
 	public created() {
 		spotify.getMe().then(user => {
 			this.userID = user.id;
@@ -357,7 +403,6 @@ export default class main extends Vue {
 						id: playlist.id
 					};
 					this.playlists.push(playlist1);
-					// this.OpenPlayList(playlist1);
 					this.selected.push(this.playlistCount);
 					this.playlistCount += 1;
 				});
@@ -488,19 +533,23 @@ export default class main extends Vue {
 				}
 			})
 		});
-		console.log(artistsContainingGenre);
 
+		let songsMerged: playlistItem[] = [];
 		playlistSongs.forEach((song) => {
 			artistsContainingGenre.forEach(artist => {
 				if (song.artist.includes(artist)) {
-					//console.log(song);
-					if (!this.selectedSongsForMerge.map(x => x.songId).includes(song.songId)) {
+					/*if (!this.selectedSongsForMerge.map(x => x.songId).includes(song.songId)) {
 						this.selectedSongsForMerge.push(song);
+					}*/
+					if (!this.selectedSongsForMergeStack.playlistSongsSelectDisplay.map(x => x.songId).includes(song.songId)) {
+						this.selectedSongsForMergeStack.playlistSongsSelectDisplay.push(song);
+						songsMerged.push(song);
 					}
 				}
 			});
 		});
 
+		this.AddToMergedHistory(songsMerged);
 	}
 
 	public GetArtistGenres(artistIds: string[], playlistId: string) {
@@ -561,7 +610,7 @@ export default class main extends Vue {
 		}).then(createResponse => {
 			console.log(createResponse);
 			const newPlaylistId = createResponse.id;
-			const songsToAdd = this.selectedSongsForMerge.map(x => x.uri);
+			const songsToAdd = this.selectedSongsForMergeStack.playlistSongsSelectDisplay.map(x => x.uri);
 			spotify.addTracksToPlaylist(newPlaylistId, songsToAdd).then(addSongsResponse => {
 				console.log(addSongsResponse);
 				this.LoadPlaylists();
@@ -601,21 +650,39 @@ export default class main extends Vue {
 		return playlistItemPromise;
 	}
 
-	public SortMostPopular(numberItems: number, playlist: playlistSongs) {
 
+	public SortMostPopular(numberItems: number, playlist: playlistSongs) {
+		//this.selectedSongsForMerge = [];
 		let playlistSongs: playlistItem[] = Object.create(playlist.songs);
 		let mostPopularOrdered: playlistItem[] = playlistSongs.sort(function (a: playlistItem, b: playlistItem) { return b.globalPopularity - a.globalPopularity });
-		for (let i = 0; i < numberItems; ++i) {
-			if (!this.selectedSongsForMerge.map(x => x.songId).includes(mostPopularOrdered[i].songId)
+		let songsMerged: playlistItem[] = [];
+		const loopCount = playlistSongs.length > numberItems ? numberItems : playlistSongs.length;
+		for (let i = 0; i < loopCount; ++i) {
+			if (!this.selectedSongsForMergeStack.playlistSongsSelectDisplay.map(x => x.songId).includes(mostPopularOrdered[i].songId)
 			) {
-				this.selectedSongsForMerge.push(mostPopularOrdered[i]);
+				this.selectedSongsForMergeStack.playlistSongsSelectDisplay.push(mostPopularOrdered[i]);
+				songsMerged.push(mostPopularOrdered[i]);
 				mostPopularOrdered[i].highlight = true;
+			}
+		}
+		this.AddToMergedHistory(songsMerged);
+	}
+
+	public AddToMergedHistory(songsMerged: playlistItem[]) {
+		if (songsMerged.length != 0) {
+			if (this.selectedSongsForMergeStack.GetLength() == 0) {
+				this.selectedSongsForMergeStack.PushPlaylistItem(songsMerged);
+			} else if (this.selectedSongsForMergeStack.GetTopPlaylistItem().length != undefined) {
+				if (this.selectedSongsForMergeStack.playlistSongsSelectDisplay.length > this.selectedSongsForMergeStack.GetTopPlaylistItem().length) {
+
+					this.selectedSongsForMergeStack.PushPlaylistItem(songsMerged);
+				}
 			}
 		}
 	}
 
 	public async PerformGlobalMerge() {
-		this.selectedSongsForMerge = [];
+		//this.selectedSongsForMerge = [];
 		const globalTopSongsNumber: number = Number((document.getElementById("globalTopSongsNumber") as HTMLInputElement).value);
 		const globalGenre: string = (document.getElementById("globalGenreSelect") as HTMLInputElement).value;
 
@@ -643,26 +710,46 @@ export default class main extends Vue {
 			});
 		});
 
+
 		let topSongsPlaylist: playlistItem[] = await this.GetGlobalTop(globalTopSongsNumber);
+		let songsMerged: playlistItem[] = []
 		topSongsPlaylist.forEach(playlistitem => {
 			let uri = playlistitem.uri;
 			let inBoth = fromBoth[uri];
 			if (inBoth != null || inBoth != undefined) {
-				if (!this.selectedSongsForMerge.map(x => x.songId).includes(playlistitem.songId)) {
-					this.selectedSongsForMerge.push(playlistitem);
+				if (!this.selectedSongsForMergeStack.playlistSongsSelectDisplay.map(x => x.songId).includes(playlistitem.songId)) {
+					this.selectedSongsForMergeStack.playlistSongsSelectDisplay.push(playlistitem);
+					songsMerged.push(playlistitem);
 				}
 			}
 		});
 
 		//TODO: Maybe make this a better popup dialog
-		if (this.selectedSongsForMerge.length == 0) {
+		if (songsMerged.length == 0) {
 			alert("No Songs Matched the Merge Criteria");
 		}
 
+		this.AddToMergedHistory(songsMerged);
 	}
 
 	public UndoLastMerge() {
 
+		console.log(this.selectedSongsForMergeStack.playlistSongsSelectList);
+		console.log(this.selectedSongsForMergeStack.GetLength());
+		if (!this.selectedSongsForMergeStack.IsEmpty()) {
+			const length: number = this.selectedSongsForMergeStack.GetLength();
+			if (length < 2) {
+				this.selectedSongsForMergeStack.playlistSongsSelectDisplay = [];
+			} else {
+				//console.log(this.selectedSongsForMergeStack.playlistSongsSelectList[1]);
+				this.selectedSongsForMergeStack.PopPlaylistItem();
+
+				this.selectedSongsForMergeStack.playlistSongsSelectDisplay = this.selectedSongsForMergeStack.GetTopPlaylistItem();
+			}
+		} else {
+			this.selectedSongsForMergeStack.playlistSongsSelectDisplay = [];
+		}
+		console.log(this.selectedSongsForMergeStack.playlistSongsSelectList);
 	}
 
 	public ShowOrHide() {
@@ -688,6 +775,11 @@ export default class main extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.topNav {
+	position: fixed;
+	width: 100%;
+	z-index: 2;
+}
 /* The navigation menu links */
 .scrollStyle {
 	overflow-y: scroll;
