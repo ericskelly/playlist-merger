@@ -7,9 +7,15 @@
 		/>
 		<nav class="topNav navbar navbar-inverse navbar-fixed-top header">
 			<a class="navbar-brand" style="color: #1DB954">Spotify Playlist Merger</a>
-			<form class="form-inline">
-				<input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" />
-				<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+			<form class="form-inline" style="margin: 0 auto">
+				<input
+					class="form-control mr-sm-2"
+					style="width: 30vw"
+					type="search"
+					placeholder="Search Playlists"
+					aria-label="Search"
+					v-model="playlistSearchText"
+				/>
 			</form>
 		</nav>
 		<div class="container-fluid">
@@ -20,10 +26,13 @@
 					max-width="500"
 					tile
 					width="300"
-					style="height: 100%; position: fixed; top: 55px;"
+					style="height: 100%; position: fixed; top: 55px; overflow-y: auto"
 				>
 					<v-list rounded style="background-color">
-						<v-subheader>Playlists</v-subheader>
+						<v-subheader>
+							Playlists
+							<b-form-checkbox v-model="showSongs" switch style="margin-left: auto;">Songs</b-form-checkbox>
+						</v-subheader>
 						<v-list-item-group multiple v-model="selected" style="text-align: left">
 							<v-list-item
 								v-for="playlist in playlists"
@@ -46,23 +55,6 @@
 					<section>
 						<div class="container" v-if="playlistsLoaded">
 							<div style="border: 1px solid #1DB954; height: 100px">
-								<!--<v-row>
-                  <v-col v-if="selectedSongsForMerge.length > 0" :justify="start">
-                    <v-btn @click="ShowOrHide()">Merged Playlist</v-btn>
-                  </v-col>
-                  <v-col :justify="start">
-                    <v-btn @click="ShowOrHideSongs()">Display Songs</v-btn>
-                  </v-col>
-                  <v-col>
-                    <b-dropdown id="dropdown-1" text="Merge" class="m-md-2">
-                      <b-dropdown-item @click="SortTop(5)">Top 5</b-dropdown-item>
-                      <b-dropdown-divider></b-dropdown-divider>
-                      <b-dropdown-item @click="SortTop(10)">Top 10</b-dropdown-item>
-                      <b-dropdown-item @click="SortTop(50)">Top 50</b-dropdown-item>
-                    </b-dropdown>
-                  </v-col>
-                  <v-col></v-col>
-								</v-row>-->
 								<v-col cols="12" style="height:100%">
 									<v-row justify="center" style="height:100%">
 										<v-col cols="3">
@@ -99,7 +91,7 @@
 									</v-row>
 								</v-col>
 							</div>
-							<v-row v-if="columns != -1">
+							<v-row>
 								<v-col :cols="3" v-if="selectedSongsForMergeStack.playlistSongsSelectDisplay.length > 0">
 									<v-card
 										style="border: 1px solid #1DB954"
@@ -115,7 +107,7 @@
 												<div data-app>
 													<!--<v-btn color="primary" dark @click="dialog = true"></v-btn>-->
 
-													<v-icon color="primary" dark v-on="on" @click="dialog = true">create</v-icon>
+													<v-icon color="primary" dark @click="dialog = true">create</v-icon>
 
 													<v-dialog v-model="dialog" max-width="500">
 														<v-card>
@@ -152,14 +144,14 @@
 											</div>
 										</v-card-title>
 										<v-card-subtitle style="float: right">
-											<v-icon v-on="on" @click="UndoLastMerge()">undo</v-icon>
+											<v-icon @click="UndoLastMerge()">undo</v-icon>
 										</v-card-subtitle>
 										<v-divider></v-divider>
 										<v-list class="scrollStyle" max-height="500px">
 											<v-list-item
 												two-line
 												v-for="songs in selectedSongsForMergeStack.playlistSongsSelectDisplay"
-												v-bind:key="songs.song"
+												v-bind:key="songs.uri"
 												style="text-align: left; max-height: 50px"
 											>
 												<v-list-item-content>
@@ -179,7 +171,7 @@
 									</v-card>
 								</v-col>
 								<v-col
-									v-for="(playlist, index) in playlistSongsSelected"
+									v-for="(playlist, index) in FilteredPlaylists()"
 									v-bind:key="playlist.playlistID"
 									v-bind:cols="3"
 								>
@@ -188,7 +180,7 @@
 											<div style="display: flex; justify-content: space-between; width: 100%">
 												<v-chip outlined>
 													{{
-													playlistSongsSelected[index].playlistName
+													playlist.playlistName
 													}}
 												</v-chip>
 												<div>
@@ -207,12 +199,9 @@
 														<b-dropdown-header id="dropdown-header-label1">Merge Options</b-dropdown-header>
 														<b-dropdown-divider></b-dropdown-divider>
 														<b-dropdown-header id="dropdown-header-label1">Popular Songs</b-dropdown-header>
-														<b-dropdown-item
-															@click="SortMostPopular(5, playlistSongsSelected[index])"
-															style="min-width:250px"
-														>Top 5</b-dropdown-item>
-														<b-dropdown-item @click="SortMostPopular(10,playlistSongsSelected[index])">Top 10</b-dropdown-item>
-														<b-dropdown-item @click="SortMostPopular(50,playlistSongsSelected[index])">Top 50</b-dropdown-item>
+														<b-dropdown-item @click="SortMostPopular(5, playlist)" style="min-width:250px">Top 5</b-dropdown-item>
+														<b-dropdown-item @click="SortMostPopular(10,playlist)">Top 10</b-dropdown-item>
+														<b-dropdown-item @click="SortMostPopular(50,playlist)">Top 50</b-dropdown-item>
 														<b-dropdown-divider></b-dropdown-divider>
 														<b-dropdown-form>
 															<b-form-group label="Genre" label-for="dropdown-form-genre" @submit.stop.prevent>
@@ -220,8 +209,8 @@
 																	v-bind:id="playlist.playlistID"
 																	list="options-list"
 																	size="sm"
-																	@input="SearchPlaylistGenre(playlistSongsSelected[index].playlistID)"
-																	@focus="SetPlaylistSearchGenres(playlistSongsSelected[index].playlistID)"
+																	@input="SearchPlaylistGenre(playlist.playlistID)"
+																	@focus="SetPlaylistSearchGenres(playlist.playlistID)"
 																	placeholder="Enter Genre"
 																></b-form-input>
 																<b-form-datalist
@@ -246,7 +235,7 @@
 											<v-list-item
 												two-line
 												v-for="songs in playlistSongsSelected[index].songs"
-												v-bind:key="songs.song"
+												v-bind:key="songs.uri"
 												v-bind:style="[songs.highlight? { color: '#008000' } : { color: '#000000' }]"
 												style="text-align: left; max-height: 50px"
 											>
@@ -367,7 +356,6 @@ export default class main extends Vue {
 	private playlists: playlist[] = [];
 	private playlistSongsSelected: playlistSongs[] = [];
 	private selected: number[] = [];
-	//private selectedSongsForMerge: playlistItem[] = [];
 	private playlistCount: number = 0;
 	private showMerged: boolean = true;
 	private playlistsLoaded: boolean = false;
@@ -382,6 +370,7 @@ export default class main extends Vue {
 	private readyToSort: boolean = false;
 	private totalSongs: number = 0;
 	private selectedSongsForMergeStack: selectedSongsForMergeHistoryStack = new selectedSongsForMergeHistoryStack();
+	private playlistSearchText: string = '';
 	public created() {
 		spotify.getMe().then(user => {
 			this.userID = user.id;
@@ -645,7 +634,7 @@ export default class main extends Vue {
 				highlight: false
 			}
 			playlistItemPromise.push(playlistItem);
-		})
+		});
 
 		return playlistItemPromise;
 	}
@@ -733,9 +722,6 @@ export default class main extends Vue {
 	}
 
 	public UndoLastMerge() {
-
-		console.log(this.selectedSongsForMergeStack.playlistSongsSelectList);
-		console.log(this.selectedSongsForMergeStack.GetLength());
 		if (!this.selectedSongsForMergeStack.IsEmpty()) {
 			const length: number = this.selectedSongsForMergeStack.GetLength();
 			if (length < 2) {
@@ -749,27 +735,13 @@ export default class main extends Vue {
 		} else {
 			this.selectedSongsForMergeStack.playlistSongsSelectDisplay = [];
 		}
-		console.log(this.selectedSongsForMergeStack.playlistSongsSelectList);
 	}
 
-	public ShowOrHide() {
-		if (this.showMerged === true) {
-			this.showMerged = false;
-		} else {
-			this.showMerged = true;
-		}
+	public FilteredPlaylists(): playlistSongs[] {
+		return this.playlistSongsSelected.filter(playlist => {
+			return playlist.playlistName.toLowerCase().includes(this.playlistSearchText.toLowerCase());
+		})
 	}
-
-	public ShowOrHideSongs() {
-		if (this.showSongs == true) {
-			this.showSongs = false;
-		} else {
-			this.showSongs = true;
-		}
-	}
-
-
-
 }
 </script>
 

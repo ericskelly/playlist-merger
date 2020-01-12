@@ -26,28 +26,32 @@ sp_oauth = spotipy.oauth2.SpotifyOAuth(SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,
 @app.route('/', methods=['GET'])
 def login():
     access_token = ""
-    
+    refresh_token = ""
     token_info = sp_oauth.get_cached_token()
-
     if token_info:
         access_token = token_info['access_token']
+        refresh_token = token_info['refresh_token']
     else:
         url = request.url
         code = sp_oauth.parse_response_code(url)
         if code:
             token_info = sp_oauth.get_access_token(code)
             access_token = token_info['access_token']
+            refresh_token = token_info['refresh_token']
 
     if access_token:
-        return redirect(CLIENT_REDIRECT_URL + access_token)      
+        return redirect(CLIENT_REDIRECT_URL + access_token + '&refresh_token=' + refresh_token)      
     else:
-        #return htmlForLoginButton()
         return redirect(sp_oauth.get_authorize_url())
 
-def htmlForLoginButton():
-    auth_url = getSPOauthURI()
-    htmlLoginButton = "<a href='" + auth_url + "'>Login to Spotify</a>"
-    return htmlLoginButton
+@app.route('/refresh', methods=['GET'])
+def refresh():
+    refresh_token_in = request.form.get('refresh_token')
+    token_info = sp_oauth.refresh_access_token(refresh_token)
+    access_token = token_info['access_token']
+    refresh_token = token_info['refresh_token']
+    #TODO - pass back new access token and figure out the refresh workflow 
+    return 0 
 
 def getSPOauthURI():
     auth_url = sp_oauth.get_authorize_url()
