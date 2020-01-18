@@ -20,14 +20,7 @@
 		</nav>
 		<div class="container-fluid">
 			<div class="row">
-				<v-card
-					dark
-					class="sidenav mx-auto"
-					max-width="500"
-					tile
-					width="300"
-					style="height: 100%; position: fixed; top: 55px; overflow-y: auto"
-				>
+				<v-card dark class="col sidenav" tile>
 					<v-list rounded style="background-color">
 						<v-subheader>
 							Playlists
@@ -48,200 +41,195 @@
 						</v-list-item-group>
 					</v-list>
 				</v-card>
-				<div
-					class="col"
-					style="background-color: #353535; min-height: 100vh; height:auto; margin-left: 300px; margin-top: 55px"
-				>
-					<section>
-						<div class="container" v-if="playlistsLoaded">
-							<div style="border: 1px solid #1DB954; height: 100px">
-								<v-col cols="12" style="height:100%">
-									<v-row justify="center" style="height:100%">
-										<v-col cols="3">
-											<b-form-group label="Top Songs" label-for="dropdown-top-songs" style="color:white;">
-												<b-form-select
-													v-model="selectedTopSong"
-													id="globalTopSongsNumber"
-													size="sm"
-													:options="numbersOneToFifty"
-												></b-form-select>
-											</b-form-group>
-										</v-col>
-										<v-col cols="3">
-											<b-form-group label="Genre" label-for="dropdown-form-genre" style="color:white;">
-												<b-form-input
-													id="globalGenreSelect"
-													list="genre-list"
-													size="sm"
-													placeholder="Enter Genre"
-												></b-form-input>
-												<b-form-datalist id="genre-list" v-bind:options="globalUniqueGenres"></b-form-datalist>
-											</b-form-group>
-										</v-col>
+				<div class="col containerdiv">
+					<div class="customcontainer" v-if="playlistsLoaded">
+						<div style="border: 1px solid #1DB954; height: 100px">
+							<v-col cols="12" style="height:100%">
+								<v-row justify="center" style="height:100%">
+									<v-col cols="3">
+										<b-form-group label="Top Songs" label-for="dropdown-top-songs" style="color:white;">
+											<b-form-select
+												v-model="selectedTopSong"
+												id="globalTopSongsNumber"
+												size="sm"
+												:options="numbersOneToFifty"
+											></b-form-select>
+										</b-form-group>
+									</v-col>
+									<v-col cols="3">
+										<b-form-group label="Genre" label-for="dropdown-form-genre" style="color:white;">
+											<b-form-input
+												id="globalGenreSelect"
+												list="genre-list"
+												size="sm"
+												placeholder="Enter Genre"
+											></b-form-input>
+											<b-form-datalist id="genre-list" v-bind:options="globalUniqueGenres"></b-form-datalist>
+										</b-form-group>
+									</v-col>
 
-										<v-col cols="3"></v-col>
-										<v-col cols="3" style="position:relative; height:100%">
-											<button
-												type="submit"
-												class="btn btn-outline-success my-2 my-sm-0"
-												style="position:absolute; bottom:0; right: 5%;"
-												@click="PerformGlobalMerge()"
-											>Merge</button>
-										</v-col>
-									</v-row>
-								</v-col>
-							</div>
-							<v-row>
-								<v-col :cols="3" v-if="selectedSongsForMergeStack.playlistSongsSelectDisplay.length > 0">
-									<v-card
-										style="border: 1px solid #1DB954"
-										shaped
-										class="mx-auto"
-										tile
-										dark
-										v-if="showMerged"
-									>
-										<v-card-title>
-											<div style="display: flex; justify-content: space-between; width: 100%">
-												<v-chip outlined>Merged Playlist</v-chip>
-												<div data-app>
-													<!--<v-btn color="primary" dark @click="dialog = true"></v-btn>-->
-
-													<v-icon color="primary" dark @click="dialog = true">create</v-icon>
-
-													<v-dialog v-model="dialog" max-width="500">
-														<v-card>
-															<v-card-title class="headline">Create Playlist</v-card-title>
-															<v-card-text>
-																<v-container fluid>
-																	<v-row>
-																		<v-col cols="12">
-																			<v-text-field id="nameField" label="Playlist Name*" required></v-text-field>
-																		</v-col>
-																		<v-col cols="12">
-																			<v-text-field id="descriptionField" label="Description"></v-text-field>
-																		</v-col>
-																		<v-col>
-																			<v-checkbox v-model="newPlaylistPublic" label="Public Playlist?"></v-checkbox>
-																		</v-col>
-																		<v-col>
-																			<v-checkbox v-model="newPlaylistCollaborative" label="Collaborative Playlist?"></v-checkbox>
-																		</v-col>
-																	</v-row>
-																</v-container>
-																<small>*indicates required field</small>
-															</v-card-text>
-															<v-card-actions>
-																<v-spacer></v-spacer>
-
-																<v-btn color="green darken-1" text @click="dialog = false">Cancel</v-btn>
-
-																<v-btn color="green darken-1" text @click="CreateMergedPlaylist()">Create</v-btn>
-															</v-card-actions>
-														</v-card>
-													</v-dialog>
-												</div>
-											</div>
-										</v-card-title>
-										<v-card-subtitle style="float: right">
-											<v-icon @click="UndoLastMerge()">undo</v-icon>
-										</v-card-subtitle>
-										<v-divider></v-divider>
-										<v-list class="scrollStyle" max-height="500px">
-											<v-list-item
-												two-line
-												v-for="songs in selectedSongsForMergeStack.playlistSongsSelectDisplay"
-												v-bind:key="songs.uri"
-												style="text-align: left; max-height: 50px"
-											>
-												<v-list-item-content>
-													<v-list-item-title>{{songs.song}}</v-list-item-title>
-													<v-list-item-subtitle>{{songs.artist}}</v-list-item-subtitle>
-												</v-list-item-content>
-											</v-list-item>
-										</v-list>
-									</v-card>
-								</v-col>
-								<v-col
-									v-for="(playlist, index) in FilteredPlaylists()"
-									v-bind:key="playlist.playlistID"
-									v-bind:cols="3"
-								>
-									<v-card class="mx-auto" tile dark>
-										<v-card-title>
-											<div style="display: flex; justify-content: space-between; width: 100%">
-												<v-chip outlined>
-													{{
-													playlist.playlistName
-													}}
-												</v-chip>
-												<div>
-													<b-dropdown
-														id="dropdown-1"
-														offset="-120px"
-														size="sm"
-														text
-														class
-														no-caret
-														variant="transparent"
-													>
-														<template v-slot:button-content>
-															<v-icon>settings</v-icon>
-														</template>
-														<b-dropdown-header id="dropdown-header-label1">Merge Options</b-dropdown-header>
-														<b-dropdown-divider></b-dropdown-divider>
-														<b-dropdown-header id="dropdown-header-label1">Popular Songs</b-dropdown-header>
-														<b-dropdown-item @click="SortMostPopular(5, playlist)" style="min-width:250px">Top 5</b-dropdown-item>
-														<b-dropdown-item @click="SortMostPopular(10,playlist)">Top 10</b-dropdown-item>
-														<b-dropdown-item @click="SortMostPopular(50,playlist)">Top 50</b-dropdown-item>
-														<b-dropdown-divider></b-dropdown-divider>
-														<b-dropdown-form>
-															<b-form-group label="Genre" label-for="dropdown-form-genre" @submit.stop.prevent>
-																<b-form-input
-																	v-bind:id="playlist.playlistID"
-																	list="options-list"
-																	size="sm"
-																	@input="SearchPlaylistGenre(playlist.playlistID)"
-																	@focus="SetPlaylistSearchGenres(playlist.playlistID)"
-																	placeholder="Enter Genre"
-																></b-form-input>
-																<b-form-datalist
-																	v-if="readyToSort"
-																	id="options-list"
-																	v-bind:options="currentFocusedGenresSearch"
-																></b-form-datalist>
-															</b-form-group>
-
-															<b-button
-																variant="primary"
-																size="sm"
-																@click="OnGenreSelect(playlist.playlistID)"
-															>Merge</b-button>
-														</b-dropdown-form>
-													</b-dropdown>
-												</div>
-											</div>
-										</v-card-title>
-										<v-divider></v-divider>
-										<v-list class="scrollStyle" max-height="500px" v-if="showSongs">
-											<v-list-item
-												two-line
-												v-for="songs in playlistSongsSelected[index].songs"
-												v-bind:key="songs.uri"
-												v-bind:style="[songs.highlight? { color: '#008000' } : { color: '#000000' }]"
-												style="text-align: left; max-height: 50px"
-											>
-												<v-list-item-content>
-													<v-list-item-title>{{songs.song}}</v-list-item-title>
-													<v-list-item-subtitle>{{songs.artist}}</v-list-item-subtitle>
-												</v-list-item-content>
-											</v-list-item>
-										</v-list>
-									</v-card>
-								</v-col>
-							</v-row>
+									<v-col cols="3"></v-col>
+									<v-col cols="3" style="position:relative; height:100%">
+										<button
+											type="submit"
+											class="btn btn-outline-success my-2 my-sm-0"
+											style="position:absolute; bottom:0; right: 5%;"
+											@click="PerformGlobalMerge()"
+										>Merge</button>
+									</v-col>
+								</v-row>
+							</v-col>
 						</div>
-					</section>
+						<v-row class="playlistsDiv">
+							<v-col cols="3" v-if="selectedSongsForMergeStack.playlistSongsSelectDisplay.length > 0">
+								<v-card
+									style="border: 1px solid #1DB954"
+									shaped
+									class="mx-auto"
+									tile
+									dark
+									v-if="showMerged"
+								>
+									<v-card-title>
+										<div style="display: flex; justify-content: space-between; width: 100%">
+											<v-chip outlined>Merged Playlist</v-chip>
+											<div data-app>
+												<!--<v-btn color="primary" dark @click="dialog = true"></v-btn>-->
+
+												<v-icon color="primary" dark @click="dialog = true">create</v-icon>
+
+												<v-dialog v-model="dialog" max-width="500">
+													<v-card>
+														<v-card-title class="headline">Create Playlist</v-card-title>
+														<v-card-text>
+															<v-container fluid>
+																<v-row>
+																	<v-col cols="12">
+																		<v-text-field id="nameField" label="Playlist Name*" required></v-text-field>
+																	</v-col>
+																	<v-col cols="12">
+																		<v-text-field id="descriptionField" label="Description"></v-text-field>
+																	</v-col>
+																	<v-col>
+																		<v-checkbox v-model="newPlaylistPublic" label="Public Playlist?"></v-checkbox>
+																	</v-col>
+																	<v-col>
+																		<v-checkbox v-model="newPlaylistCollaborative" label="Collaborative Playlist?"></v-checkbox>
+																	</v-col>
+																</v-row>
+															</v-container>
+															<small>*indicates required field</small>
+														</v-card-text>
+														<v-card-actions>
+															<v-spacer></v-spacer>
+
+															<v-btn color="green darken-1" text @click="dialog = false">Cancel</v-btn>
+
+															<v-btn color="green darken-1" text @click="CreateMergedPlaylist()">Create</v-btn>
+														</v-card-actions>
+													</v-card>
+												</v-dialog>
+											</div>
+										</div>
+									</v-card-title>
+									<v-card-subtitle style="float: right">
+										<v-icon @click="UndoLastMerge()">undo</v-icon>
+									</v-card-subtitle>
+									<v-divider></v-divider>
+									<v-list class="scrollStyle" max-height="500px">
+										<v-list-item
+											two-line
+											v-for="songs in selectedSongsForMergeStack.playlistSongsSelectDisplay"
+											v-bind:key="songs.uri"
+											style="text-align: left; max-height: 50px"
+										>
+											<v-list-item-content>
+												<v-list-item-title>{{songs.song}}</v-list-item-title>
+												<v-list-item-subtitle>{{songs.artist}}</v-list-item-subtitle>
+											</v-list-item-content>
+										</v-list-item>
+									</v-list>
+								</v-card>
+							</v-col>
+							<v-col
+								v-for="(playlist, index) in FilteredPlaylists()"
+								v-bind:key="playlist.playlistID"
+								v-bind:cols="3"
+							>
+								<v-card class="mx-auto" tile dark>
+									<v-card-title>
+										<div style="display: flex; justify-content: space-between; width: 100%">
+											<v-chip outlined>
+												{{
+												playlist.playlistName
+												}}
+											</v-chip>
+											<div>
+												<b-dropdown
+													id="dropdown-1"
+													offset="-120px"
+													size="sm"
+													text
+													class
+													no-caret
+													variant="transparent"
+												>
+													<template v-slot:button-content>
+														<v-icon>settings</v-icon>
+													</template>
+													<b-dropdown-header id="dropdown-header-label1">Merge Options</b-dropdown-header>
+													<b-dropdown-divider></b-dropdown-divider>
+													<b-dropdown-header id="dropdown-header-label1">Popular Songs</b-dropdown-header>
+													<b-dropdown-item @click="SortMostPopular(5, playlist)" style="min-width:250px">Top 5</b-dropdown-item>
+													<b-dropdown-item @click="SortMostPopular(10,playlist)">Top 10</b-dropdown-item>
+													<b-dropdown-item @click="SortMostPopular(50,playlist)">Top 50</b-dropdown-item>
+													<b-dropdown-divider></b-dropdown-divider>
+													<b-dropdown-form>
+														<b-form-group label="Genre" label-for="dropdown-form-genre" @submit.stop.prevent>
+															<b-form-input
+																v-bind:id="playlist.playlistID"
+																list="options-list"
+																size="sm"
+																@input="SearchPlaylistGenre(playlist.playlistID)"
+																@focus="SetPlaylistSearchGenres(playlist.playlistID)"
+																placeholder="Enter Genre"
+															></b-form-input>
+															<b-form-datalist
+																v-if="readyToSort"
+																id="options-list"
+																v-bind:options="currentFocusedGenresSearch"
+															></b-form-datalist>
+														</b-form-group>
+
+														<b-button
+															variant="primary"
+															size="sm"
+															@click="OnGenreSelect(playlist.playlistID)"
+														>Merge</b-button>
+													</b-dropdown-form>
+												</b-dropdown>
+											</div>
+										</div>
+									</v-card-title>
+									<v-divider></v-divider>
+									<v-list class="scrollStyle" max-height="500px" v-if="showSongs">
+										<v-list-item
+											two-line
+											v-for="songs in playlistSongsSelected[index].songs"
+											v-bind:key="songs.uri"
+											v-bind:style="[songs.highlight? { color: '#008000' } : { color: '#000000' }]"
+											style="text-align: left; max-height: 50px"
+										>
+											<v-list-item-content>
+												<v-list-item-title>{{songs.song}}</v-list-item-title>
+												<v-list-item-subtitle>{{songs.artist}}</v-list-item-subtitle>
+											</v-list-item-content>
+										</v-list-item>
+									</v-list>
+								</v-card>
+							</v-col>
+						</v-row>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -759,6 +747,82 @@ export default class main extends Vue {
 	position: fixed;
 	width: 100%;
 	z-index: 2;
+}
+
+.sidenav {
+	height: 100%;
+	position: fixed;
+	top: 55px;
+	overflow-y: auto;
+	width: 300px;
+}
+
+.containerdiv {
+	background-color: #353535;
+	min-height: 100vh;
+	height: auto;
+	margin-left: 300px;
+	margin-top: 55px;
+}
+
+.customcontainer {
+	width: 100%;
+	padding-right: 15px;
+	padding-left: 15px;
+	padding: 12px;
+	margin-right: auto;
+	margin-left: auto;
+	max-width: 1200px;
+}
+
+@media screen and (max-width: 1330px) {
+	/*.customcontainer {
+		width: auto;
+		padding-right: 15px;
+		padding-left: 15px;
+		padding: 12px;
+		margin-right: auto;
+		margin-left: auto;
+	}*/
+	.containerdiv {
+		background-color: #353535;
+		min-height: 100vh;
+		height: auto;
+		margin-left: 300px;
+		padding-right: 300px;
+		margin-top: 55px;
+	}
+}
+
+@media screen and (min-width: 801px) and (max-width: 1200px) {
+	.playlistsDiv .col-3 {
+		min-width: 50%;
+	}
+}
+
+@media screen and (max-width: 800px) {
+	.playlistsDiv .col-3 {
+		min-width: 100%;
+	}
+}
+
+@media screen and (max-width: 600px) {
+	.sidenav {
+		height: 200px;
+		overflow-y: auto;
+		top: 55px;
+		width: 100%;
+		font-size: small;
+	}
+
+	.containerdiv {
+		background-color: #353535;
+		min-height: 100vh;
+		height: auto;
+		margin-left: 0;
+		padding-right: 0;
+		margin-top: 255px;
+	}
 }
 
 /* The navigation menu links */
