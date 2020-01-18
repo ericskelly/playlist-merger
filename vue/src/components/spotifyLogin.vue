@@ -26,6 +26,7 @@ export default class spotifyLogin extends Vue {
 		this.params = this.getHashParams();
 		if (this.params.access_token) {
 			spotify.setAccessToken(this.params.access_token);
+			sessionStorage.setItem('access_token', this.params.access_token);
 			router.push('/');
 		}
 		if (this.params.refresh_token) {

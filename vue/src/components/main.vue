@@ -22,7 +22,7 @@
 			<div class="row">
 				<v-card
 					dark
-					class="mx-auto"
+					class="sidenav mx-auto"
 					max-width="500"
 					tile
 					width="300"
@@ -39,7 +39,7 @@
 								v-bind:key="playlist.id"
 								@click="OpenPlayList(playlist)"
 							>
-								<template v-slot:default="{ active, toggle }">
+								<template>
 									<v-list-item-content>
 										<v-list-item-title v-text="playlist.name"></v-list-item-title>
 									</v-list-item-content>
@@ -155,16 +155,8 @@
 												style="text-align: left; max-height: 50px"
 											>
 												<v-list-item-content>
-													<v-list-item-title>
-														{{
-														songs.song
-														}}
-													</v-list-item-title>
-													<v-list-item-subtitle>
-														{{
-														songs.artist
-														}}
-													</v-list-item-subtitle>
+													<v-list-item-title>{{songs.song}}</v-list-item-title>
+													<v-list-item-subtitle>{{songs.artist}}</v-list-item-subtitle>
 												</v-list-item-content>
 											</v-list-item>
 										</v-list>
@@ -240,16 +232,8 @@
 												style="text-align: left; max-height: 50px"
 											>
 												<v-list-item-content>
-													<v-list-item-title>
-														{{
-														songs.song
-														}}
-													</v-list-item-title>
-													<v-list-item-subtitle>
-														{{
-														songs.artist
-														}}
-													</v-list-item-subtitle>
+													<v-list-item-title>{{songs.song}}</v-list-item-title>
+													<v-list-item-subtitle>{{songs.artist}}</v-list-item-subtitle>
 												</v-list-item-content>
 											</v-list-item>
 										</v-list>
@@ -268,9 +252,11 @@
 import { Prop, Vue } from "vue-property-decorator";
 import Component from "vue-class-component";
 import SpotifyWebApi from "spotify-web-api-js";
+import axios from "axios";
 import router from "../router";
 import { BDropdown } from 'bootstrap-vue';
 
+declare var process: any;
 const spotify = new SpotifyWebApi();
 
 interface playlist {
@@ -372,10 +358,35 @@ export default class main extends Vue {
 	private selectedSongsForMergeStack: selectedSongsForMergeHistoryStack = new selectedSongsForMergeHistoryStack();
 	private playlistSearchText: string = '';
 	public created() {
+		const URL: string = process.env.VUE_APP_FLASK_API_URL + "getcachedtoken";
+		let access_token_stored = sessionStorage.getItem('access_token');
+		if (!access_token_stored) {
+			axios.get(URL).then((response) => {
+				access_token_stored = response.data.access_token;
+				if (!access_token_stored) {
+					router.push("/login");
+				} else {
+					sessionStorage.setItem('access_token', access_token_stored);
+					this.SetAccessAndLoadData(access_token_stored);
+				}
+			});
+		} else {
+			this.SetAccessAndLoadData(access_token_stored);
+		}
+	}
+
+	public SetAccessAndLoadData(access_token: string) {
+		spotify.setAccessToken(access_token);
 		spotify.getMe().then(user => {
 			this.userID = user.id;
-		});
-		this.LoadPlaylists();
+			this.LoadPlaylists();
+		},
+			function (err) {
+				if (err.status == "401") {
+					sessionStorage.removeItem('access_token');
+					router.push("/login");
+				}
+			});
 	}
 
 	public LoadPlaylists() {
@@ -397,8 +408,8 @@ export default class main extends Vue {
 				});
 			},
 			function (err) {
-				console.log(err.responseXML);
-				if (err.responseXML === null) {
+				if (err.status == "401") {
+					sessionStorage.removeItem('access_token');
 					router.push("/login");
 				}
 			}
@@ -428,9 +439,7 @@ export default class main extends Vue {
 		const playlistIndex: number = this.playlistSongsSelected
 			.map(x => x.playlistID)
 			.indexOf(playlist.id);
-		if (
-			this.playlistSongsSelected.map(x => x.playlistID).includes(playlist.id)
-		) {
+		if (this.playlistSongsSelected.map(x => x.playlistID).includes(playlist.id)) {
 			this.playlistSongsSelected.splice(playlistIndex, 1);
 		} else {
 			const totalPlayListSongs: number = playlist.tracks.total;
@@ -647,8 +656,7 @@ export default class main extends Vue {
 		let songsMerged: playlistItem[] = [];
 		const loopCount = playlistSongs.length > numberItems ? numberItems : playlistSongs.length;
 		for (let i = 0; i < loopCount; ++i) {
-			if (!this.selectedSongsForMergeStack.playlistSongsSelectDisplay.map(x => x.songId).includes(mostPopularOrdered[i].songId)
-			) {
+			if (!this.selectedSongsForMergeStack.playlistSongsSelectDisplay.map(x => x.songId).includes(mostPopularOrdered[i].songId)) {
 				this.selectedSongsForMergeStack.playlistSongsSelectDisplay.push(mostPopularOrdered[i]);
 				songsMerged.push(mostPopularOrdered[i]);
 				mostPopularOrdered[i].highlight = true;
@@ -752,6 +760,7 @@ export default class main extends Vue {
 	width: 100%;
 	z-index: 2;
 }
+
 /* The navigation menu links */
 .scrollStyle {
 	overflow-y: scroll;
@@ -764,67 +773,45 @@ export default class main extends Vue {
 	height: 0;
 }
 
+/*
 .sidenav li {
-	padding-top: 15px;
-	text-decoration: none;
-	font-size: 25px;
-	display: block;
-	color: #818181;
-	text-align: left;
-	list-style-type: none;
-	cursor: pointer;
-	word-wrap: break-word;
+  padding-top: 15px;
+  text-decoration: none;
+  font-size: 25px;
+  display: block;
+  color: #818181;
+  text-align: left;
+  list-style-type: none;
+  cursor: pointer;
+  word-wrap: break-word;
 }
 
 .sidenav v-list-item-content {
-	padding-top: 15px;
-	text-decoration: none;
-	font-size: 25px;
-	display: block;
-	color: #818181;
-	text-align: left;
-	list-style-type: none;
-	cursor: pointer;
-	word-wrap: break-word;
+  padding-top: 15px;
+  text-decoration: none;
+  font-size: 25px;
+  display: block;
+  color: #818181;
+  text-align: left;
+  list-style-type: none;
+  cursor: pointer;
+  word-wrap: break-word;
 }
 
 .sidenav ul {
-	padding-inline-start: 10px;
+  padding-inline-start: 10px;
 }
 
-/* When you mouse over the navigation links, change their color */
 .sidenav li:hover {
-	color: #f1f1f1;
-}
+  color: #f1f1f1;
+}*/
 
 .sidenav li:active {
 	color: #f1f1f1;
 }
 
-.selectedMerge {
-	color: green;
-}
-
 .header {
 	background-color: #282828;
-}
-
-.table {
-	margin: 0 auto;
-	min-width: 60%;
-	width: auto !important;
-	max-width: 100%;
-}
-
-.table-responsive {
-	display: block;
-	width: 100%;
-	overflow-x: auto;
-}
-
-.songsLists {
-	list-style-type: none;
-	text-align: left;
 }
 
 /* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
