@@ -61,7 +61,8 @@ def returnCachedToken():
     if token_info:
         access_token = token_info['access_token']
         refresh_token = token_info['refresh_token']
-    return jsonify(access_token = access_token)
+        return jsonify(access_token = access_token)
+    return jsonify(error = "no access token cached")
 
 def getSPOauthURI():
     auth_url = sp_oauth.get_authorize_url()
