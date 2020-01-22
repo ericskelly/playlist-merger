@@ -776,14 +776,6 @@ export default class main extends Vue {
 }
 
 @media screen and (max-width: 1330px) {
-	/*.customcontainer {
-		width: auto;
-		padding-right: 15px;
-		padding-left: 15px;
-		padding: 12px;
-		margin-right: auto;
-		margin-left: auto;
-	}*/
 	.containerdiv {
 		background-color: #353535;
 		min-height: 100vh;
@@ -836,39 +828,6 @@ export default class main extends Vue {
 	width: 0;
 	height: 0;
 }
-
-/*
-.sidenav li {
-  padding-top: 15px;
-  text-decoration: none;
-  font-size: 25px;
-  display: block;
-  color: #818181;
-  text-align: left;
-  list-style-type: none;
-  cursor: pointer;
-  word-wrap: break-word;
-}
-
-.sidenav v-list-item-content {
-  padding-top: 15px;
-  text-decoration: none;
-  font-size: 25px;
-  display: block;
-  color: #818181;
-  text-align: left;
-  list-style-type: none;
-  cursor: pointer;
-  word-wrap: break-word;
-}
-
-.sidenav ul {
-  padding-inline-start: 10px;
-}
-
-.sidenav li:hover {
-  color: #f1f1f1;
-}*/
 
 .sidenav li:active {
 	color: #f1f1f1;

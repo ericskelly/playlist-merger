@@ -9,7 +9,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css';
 
 Vue.config.productionTip = false;
 Vue.use(BootstrapVue);
-const vuetifyOptions = {}
+const vuetifyOptions = {};
 Vue.use(Vuetify);
 
 new Vue({

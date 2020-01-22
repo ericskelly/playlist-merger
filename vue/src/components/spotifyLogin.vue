@@ -34,10 +34,6 @@ export default class spotifyLogin extends Vue {
 		}
 	}
 
-	emitToMain(access_token: any) {
-		this.$emit('onLoginSend', access_token);
-	}
-
 	getHashParams() {
 		var hashParams = {} as any;
 		var e, r = /([^&;=]+)=?([^&;]*)/g,
