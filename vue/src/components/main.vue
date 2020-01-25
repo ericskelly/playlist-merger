@@ -603,11 +603,10 @@ export default class main extends Vue {
 			public: this.newPlaylistPublic,
 			collaborative: this.newPlaylistCollaborative
 		}).then(createResponse => {
-			console.log(createResponse);
 			const newPlaylistId = createResponse.id;
 			const songsToAdd = this.selectedSongsForMergeStack.playlistSongsSelectDisplay.map(x => x.uri);
 			spotify.addTracksToPlaylist(newPlaylistId, songsToAdd).then(addSongsResponse => {
-				console.log(addSongsResponse);
+				this.selectedSongsForMergeStack.playlistSongsSelectDisplay = [];
 				this.LoadPlaylists();
 			});
 		});

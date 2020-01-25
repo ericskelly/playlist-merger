@@ -24,6 +24,7 @@ export default class spotifyLogin extends Vue {
 	private refreshToken: string = '';
 	created() {
 		this.params = this.getHashParams();
+		console.log(this.params);
 		if (this.params.access_token) {
 			spotify.setAccessToken(this.params.access_token);
 			sessionStorage.setItem('access_token', this.params.access_token);
@@ -37,7 +38,7 @@ export default class spotifyLogin extends Vue {
 	getHashParams() {
 		var hashParams = {} as any;
 		var e, r = /([^&;=]+)=?([^&;]*)/g,
-			q = window.location.hash.substring(1)
+			q = window.location.hash.replace('#/login/', '').substring(1)
 		while (e = r.exec(q)) {
 			hashParams[e[1]] = decodeURIComponent(e[2]);
 		}
