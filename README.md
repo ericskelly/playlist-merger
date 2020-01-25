@@ -1,1 +1,1 @@
-# something-spotify
+# Spotify playlist merger
