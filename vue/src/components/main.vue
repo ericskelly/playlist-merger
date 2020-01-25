@@ -333,6 +333,8 @@ class selectedSongsForMergeHistoryStack {
 
 }
 
+//document.title = "Playlist Merger";
+
 @Component({
 	components: {}
 })
@@ -361,6 +363,7 @@ export default class main extends Vue {
 	private topSongsTimeRange: any[] = [{ value: null, text: '--Select Top Songs & Range--' }, { value: 'long_term', text: 'Long Term (several years)' },
 	{ value: 'medium_term', text: 'Medium Term (last 6 months)' }, { value: 'short_term', text: 'Short Term (last month)' }];
 	public created() {
+		document.title = router.currentRoute.meta.title;
 		const URL: string = process.env.VUE_APP_FLASK_API_URL + "getcachedtoken";
 		let access_token_stored = sessionStorage.getItem('access_token');
 		if (!access_token_stored) {

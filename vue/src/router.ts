@@ -13,11 +13,13 @@ export default new Router({
       path: '/',
       name: 'main',
       component: main,
+      meta: { title: 'Playlist Merger' }
     },
     {
       path: '/login',
       name: 'spotifyLogin',
       component: spotifyLogin,
+      meta: { title: 'Login' }
     },
     {
       path: '/about',

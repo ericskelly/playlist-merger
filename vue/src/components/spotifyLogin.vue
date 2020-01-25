@@ -23,6 +23,7 @@ export default class spotifyLogin extends Vue {
 	private URL: string = process.env.VUE_APP_FLASK_API_URL;
 	private refreshToken: string = '';
 	created() {
+		document.title = router.currentRoute.meta.title;
 		this.params = this.getHashParams();
 		console.log(this.params);
 		if (this.params.access_token) {
