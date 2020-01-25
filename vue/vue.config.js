@@ -3,5 +3,5 @@ module.exports = {
     configureWebpack: {
         "devtool": "source-map"
     },
-    publicPath: process.env.ENVIRONMENT === 'production' ? '/spotify-playlist-merger/' : '/'
+    publicPath: process.env.ENVIRONMENT === 'production' ? '/playlist-merger/' : '/'
 }
