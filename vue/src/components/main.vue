@@ -43,7 +43,7 @@
 				</v-card>
 				<div class="col containerdiv">
 					<div class="customcontainer" v-if="playlistsLoaded">
-						<div style="border: 1px solid #1DB954; height: 100px">
+						<div class="globalMergeDiv">
 							<v-col cols="12" style="height:100%">
 								<v-row justify="center" style="height:100%">
 									<v-col cols="3">
@@ -53,6 +53,21 @@
 												id="globalTopSongsNumber"
 												size="sm"
 												:options="numbersOneToFifty"
+											></b-form-select>
+										</b-form-group>
+									</v-col>
+									<v-col cols="3">
+										<b-form-group
+											label="Top Songs Time Range"
+											label-for="dropdown-top-songs"
+											style="color:white;"
+										>
+											<b-form-select
+												:value="null"
+												id="topSongsTimeRange"
+												size="sm"
+												:options="topSongsTimeRange"
+												:disabled="selectedTopSong == null"
 											></b-form-select>
 										</b-form-group>
 									</v-col>
@@ -67,8 +82,6 @@
 											<b-form-datalist id="genre-list" v-bind:options="globalUniqueGenres"></b-form-datalist>
 										</b-form-group>
 									</v-col>
-
-									<v-col cols="3"></v-col>
 									<v-col cols="3" style="position:relative; height:100%">
 										<button
 											type="submit"
@@ -345,6 +358,8 @@ export default class main extends Vue {
 	private totalSongs: number = 0;
 	private selectedSongsForMergeStack: selectedSongsForMergeHistoryStack = new selectedSongsForMergeHistoryStack();
 	private playlistSearchText: string = '';
+	private topSongsTimeRange: any[] = [{ value: null, text: '--Select Top Songs & Range--' }, { value: 'long_term', text: 'Long Term (several years)' },
+	{ value: 'medium_term', text: 'Medium Term (last 6 months)' }, { value: 'short_term', text: 'Short Term (last month)' }];
 	public created() {
 		const URL: string = process.env.VUE_APP_FLASK_API_URL + "getcachedtoken";
 		let access_token_stored = sessionStorage.getItem('access_token');
@@ -504,9 +519,6 @@ export default class main extends Vue {
 	}
 
 	public OnGenreSelect(playlistID: string) {
-		/*const dropdown = this.$refs.dropdown as BDropdown;
-		dropdown.hide(true);*/
-
 		const selectedGenre = (document.getElementById(playlistID) as HTMLInputElement).value;
 		let playlistGenres: playlistGenres = this.playlistGenresList[this.playlistGenresList.findIndex(x => x.playlistID == playlistID)];
 		let playlistSongs: playlistItem[] = this.playlistSongsSelected[this.playlistSongsSelected.findIndex(x => x.playlistID == playlistID)].songs;
@@ -524,9 +536,6 @@ export default class main extends Vue {
 		playlistSongs.forEach((song) => {
 			artistsContainingGenre.forEach(artist => {
 				if (song.artist.includes(artist)) {
-					/*if (!this.selectedSongsForMerge.map(x => x.songId).includes(song.songId)) {
-						this.selectedSongsForMerge.push(song);
-					}*/
 					if (!this.selectedSongsForMergeStack.playlistSongsSelectDisplay.map(x => x.songId).includes(song.songId)) {
 						this.selectedSongsForMergeStack.playlistSongsSelectDisplay.push(song);
 						songsMerged.push(song);
@@ -617,9 +626,14 @@ export default class main extends Vue {
 		return artistsReturn;
 	}
 
-	public async GetGlobalTop(numberItems: number): Promise<playlistItem[]> {
+	public async GetGlobalTop(numberItems: number, timeRange: string): Promise<playlistItem[]> {
 		let playlistItemPromise: playlistItem[] = [];
-		let topSongs: SpotifyApi.UsersTopTracksResponse = await spotify.getMyTopTracks({ limit: numberItems });
+		var topSongs: SpotifyApi.UsersTopTracksResponse;
+		if (timeRange) {
+			topSongs = await spotify.getMyTopTracks({ limit: numberItems, time_range: timeRange });
+		} else {
+			topSongs = await spotify.getMyTopTracks({ limit: numberItems });
+		}
 		topSongs.items.forEach(topSong => {
 			let artists = this.CreateArtistsStringList(topSong.artists);
 			const playlistItem: playlistItem = {
@@ -638,7 +652,6 @@ export default class main extends Vue {
 
 
 	public SortMostPopular(numberItems: number, playlist: playlistSongs) {
-		//this.selectedSongsForMerge = [];
 		let playlistSongs: playlistItem[] = Object.create(playlist.songs);
 		let mostPopularOrdered: playlistItem[] = playlistSongs.sort(function (a: playlistItem, b: playlistItem) { return b.globalPopularity - a.globalPopularity });
 		let songsMerged: playlistItem[] = [];
@@ -667,47 +680,62 @@ export default class main extends Vue {
 	}
 
 	public async PerformGlobalMerge() {
-		//this.selectedSongsForMerge = [];
 		const globalTopSongsNumber: number = Number((document.getElementById("globalTopSongsNumber") as HTMLInputElement).value);
+		const topSongsRange: string = String((document.getElementById("topSongsTimeRange") as HTMLInputElement).value);
 		const globalGenre: string = (document.getElementById("globalGenreSelect") as HTMLInputElement).value;
 
 		let artistsContainingGenre: string[] = [];
 
-		let fromBoth: any = new Object();
+		let fromAll: any = new Object();
 
-		this.playlistGenresList.forEach(playlist => {
-			playlist.genres.forEach((genres: artistGenres) => {
-				genres.genres.forEach((genre: string) => {
-					if (genre == globalGenre) {
-						artistsContainingGenre.push(genres.artistName);
-					}
+		if (globalGenre) {
+			this.playlistGenresList.forEach(playlist => {
+				playlist.genres.forEach((genres: artistGenres) => {
+					genres.genres.forEach((genre: string) => {
+						if (genre == globalGenre) {
+							artistsContainingGenre.push(genres.artistName);
+						}
+					});
 				});
 			});
-		});
 
-		this.playlistSongsSelected.forEach(playlist => {
-			playlist.songs.forEach((song) => {
-				artistsContainingGenre.forEach(artist => {
-					if (song.artist.includes(artist)) {
-						fromBoth[song.uri] = song;
-					}
-				})
+			this.playlistSongsSelected.forEach(playlist => {
+				playlist.songs.forEach((song) => {
+					artistsContainingGenre.forEach(artist => {
+						if (song.artist.includes(artist)) {
+							//fromGenre[song.uri] = song;
+							fromAll[song.uri] = song;
+						}
+					})
+				});
 			});
-		});
+		}
 
+		if (globalTopSongsNumber) {
+			let fromAllTemp: any = new Object();
+			let topSongsPlaylist: playlistItem[] = await this.GetGlobalTop(globalTopSongsNumber, topSongsRange);
+			topSongsPlaylist.forEach(song => {
+				const songUri: string = song.uri;
+				const inMergedValue = fromAll[songUri];
+				if (inMergedValue || globalGenre == '') {
+					fromAllTemp[song.uri] = song;
+				}
+			});
+			fromAll = fromAllTemp;
+		}
 
-		let topSongsPlaylist: playlistItem[] = await this.GetGlobalTop(globalTopSongsNumber);
-		let songsMerged: playlistItem[] = []
-		topSongsPlaylist.forEach(playlistitem => {
-			let uri = playlistitem.uri;
-			let inBoth = fromBoth[uri];
-			if (inBoth != null || inBoth != undefined) {
-				if (!this.selectedSongsForMergeStack.playlistSongsSelectDisplay.map(x => x.songId).includes(playlistitem.songId)) {
-					this.selectedSongsForMergeStack.playlistSongsSelectDisplay.push(playlistitem);
-					songsMerged.push(playlistitem);
+		let songsMerged: playlistItem[] = [];
+		let songUris: string[] = Object.keys(fromAll);
+		songUris.forEach(songUri => {
+			if (!this.selectedSongsForMergeStack.playlistSongsSelectDisplay.map(x => x.uri).includes(songUri)) {
+				let playlistItem: playlistItem = fromAll[songUri];
+				if (playlistItem) {
+					this.selectedSongsForMergeStack.playlistSongsSelectDisplay.push(playlistItem);
+					songsMerged.push(playlistItem);
 				}
 			}
 		});
+
 
 		//TODO: Maybe make this a better popup dialog
 		if (songsMerged.length == 0) {
@@ -723,7 +751,6 @@ export default class main extends Vue {
 			if (length < 2) {
 				this.selectedSongsForMergeStack.playlistSongsSelectDisplay = [];
 			} else {
-				//console.log(this.selectedSongsForMergeStack.playlistSongsSelectList[1]);
 				this.selectedSongsForMergeStack.PopPlaylistItem();
 
 				this.selectedSongsForMergeStack.playlistSongsSelectDisplay = this.selectedSongsForMergeStack.GetTopPlaylistItem();
@@ -775,6 +802,11 @@ export default class main extends Vue {
 	max-width: 1200px;
 }
 
+.globalMergeDiv {
+	border: 1px solid #1db954;
+	height: 100px;
+}
+
 @media screen and (max-width: 1330px) {
 	.containerdiv {
 		background-color: #353535;
@@ -812,8 +844,27 @@ export default class main extends Vue {
 		min-height: 100vh;
 		height: auto;
 		margin-left: 0;
-		padding-right: 0;
+		padding: 0;
 		margin-top: 255px;
+	}
+}
+
+@media screen and (max-width: 380px) {
+	.globalMergeDiv {
+		height: auto;
+	}
+
+	.globalMergeDiv .col-3 {
+		min-width: 100%;
+	}
+
+	.sidenav {
+		display: none;
+	}
+
+	.containerdiv {
+		margin-top: 55px;
+		padding: 0.5em;
 	}
 }
 
