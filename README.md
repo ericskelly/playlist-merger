@@ -1,1 +1,1 @@
-# Spotify playlist merger
+# Spotify Playlist Merger
