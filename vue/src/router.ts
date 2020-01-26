@@ -19,7 +19,7 @@ export default new Router({
       path: '/login',
       name: 'spotifyLogin',
       component: spotifyLogin,
-      meta: { title: 'Login' }
+      meta: { title: 'Playlist Merger - Login' }
     },
     {
       path: '/about',

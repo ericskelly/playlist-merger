@@ -1,8 +1,11 @@
 <template>
-	<div class="centered">
-		<a v-bind:href="URL">
-			<img style="cursor: pointer;" src="../../Images/log_in-desktop-large.png" />
-		</a>
+	<div class="loginWrapper">
+		<div class="centered">
+			<p>Merge your spotify playlists based on account, song, and artist meta data</p>
+			<a v-bind:href="URL">
+				<img style="cursor: pointer;" src="../../Images/log_in-desktop-large.png" />
+			</a>
+		</div>
 	</div>
 </template>
 
