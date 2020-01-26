@@ -13,21 +13,13 @@ export default new Router({
       path: '/',
       name: 'main',
       component: main,
-      meta: { title: 'Playlist Merger' }
+      meta: { title: 'Playlist Merger' },
     },
     {
       path: '/login',
       name: 'spotifyLogin',
       component: spotifyLogin,
-      meta: { title: 'Playlist Merger - Login' }
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (about.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import(/* webpackChunkName: "about" */ './views/About.vue'),
+      meta: { title: 'Playlist Merger - Login' },
     },
   ],
 });

@@ -250,11 +250,11 @@
 </template>
 
 <script lang="ts">
-import { Prop, Vue } from "vue-property-decorator";
-import Component from "vue-class-component";
-import SpotifyWebApi from "spotify-web-api-js";
-import axios from "axios";
-import router from "../router";
+import { Prop, Vue } from 'vue-property-decorator';
+import Component from 'vue-class-component';
+import SpotifyWebApi from 'spotify-web-api-js';
+import axios from 'axios';
+import router from '../router';
 import { BDropdown } from 'bootstrap-vue';
 
 declare var process: any;
@@ -349,7 +349,7 @@ export default class main extends Vue {
 	private showMerged: boolean = true;
 	private playlistsLoaded: boolean = false;
 	private showSongs: boolean = true;
-	private userID: string = "";
+	private userID: string = '';
 	private dialog: boolean = false;
 	private newPlaylistPublic: boolean = true;
 	private newPlaylistCollaborative: boolean = false;
@@ -364,7 +364,7 @@ export default class main extends Vue {
 	{ value: 'medium_term', text: 'Medium Term (last 6 months)' }, { value: 'short_term', text: 'Short Term (last month)' }];
 	public created() {
 		document.title = router.currentRoute.meta.title;
-		const URL: string = process.env.VUE_APP_FLASK_API_URL + "getcachedtoken";
+		const URL: string = process.env.VUE_APP_FLASK_API_URL + 'getcachedtoken';
 		let access_token_stored = sessionStorage.getItem('access_token');
 		if (!access_token_stored) {
 			axios.get(URL).then((response) => {
@@ -824,11 +824,27 @@ export default class main extends Vue {
 	.playlistsDiv .col-3 {
 		min-width: 50%;
 	}
+
+	.globalMergeDiv .col-3 {
+		min-width: 50%;
+	}
+
+	.globalMergeDiv {
+		height: auto;
+	}
 }
 
 @media screen and (max-width: 800px) {
 	.playlistsDiv .col-3 {
 		min-width: 100%;
+	}
+
+	.globalMergeDiv .col-3 {
+		min-width: 100%;
+	}
+
+	.globalMergeDiv {
+		height: auto;
 	}
 }
 
@@ -890,7 +906,6 @@ export default class main extends Vue {
 	background-color: #282828;
 }
 
-/* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
 @media screen and (max-height: 450px) {
 	.sidenav {
 		padding-top: 15px;
@@ -910,7 +925,6 @@ export default class main extends Vue {
 		padding-bottom: 0;
 		overflow-x: hidden;
 		overflow-y: hidden;
-		background-color: #282828;
 		border-top: 1px solid #181818;
 	}
 }
