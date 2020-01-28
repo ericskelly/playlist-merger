@@ -17,8 +17,35 @@
 					v-model="playlistSearchText"
 				/>
 			</form>
+			<v-btn icon class="showResponsiveNav">
+				<v-icon>search</v-icon>
+			</v-btn>
+			<v-btn icon class="showResponsiveNav">
+				<v-icon @click.stop="drawer = !drawer">menu</v-icon>
+			</v-btn>
 		</nav>
 		<div class="container-fluid">
+			<v-navigation-drawer v-model="drawer" absolute temporary class="showResponsiveNav">
+				<v-list rounded style="background-color">
+					<v-subheader>
+						Playlists
+						<b-form-checkbox v-model="showSongs" switch style="margin-left: auto;">Songs</b-form-checkbox>
+					</v-subheader>
+					<v-list-item-group multiple v-model="selected" style="text-align: left">
+						<v-list-item
+							v-for="playlist in playlists"
+							v-bind:key="playlist.id"
+							@click="OpenPlayList(playlist)"
+						>
+							<template>
+								<v-list-item-content>
+									<v-list-item-title v-text="playlist.name"></v-list-item-title>
+								</v-list-item-content>
+							</template>
+						</v-list-item>
+					</v-list-item-group>
+				</v-list>
+			</v-navigation-drawer>
 			<div class="row">
 				<v-card dark class="col sidenav" tile>
 					<v-list rounded style="background-color">
@@ -250,7 +277,7 @@
 </template>
 
 <script lang="ts">
-import { Prop, Vue } from 'vue-property-decorator';
+import { Prop, Vue, Watch } from 'vue-property-decorator';
 import Component from 'vue-class-component';
 import SpotifyWebApi from 'spotify-web-api-js';
 import axios from 'axios';
@@ -362,6 +389,7 @@ export default class main extends Vue {
 	private playlistSearchText: string = '';
 	private topSongsTimeRange: any[] = [{ value: null, text: '--Select Top Songs & Range--' }, { value: 'long_term', text: 'Long Term (several years)' },
 	{ value: 'medium_term', text: 'Medium Term (last 6 months)' }, { value: 'short_term', text: 'Short Term (last month)' }];
+	private drawer: boolean = false;
 	public created() {
 		document.title = router.currentRoute.meta.title;
 		const URL: string = process.env.VUE_APP_FLASK_API_URL + 'getcachedtoken';
@@ -379,6 +407,11 @@ export default class main extends Vue {
 		} else {
 			this.SetAccessAndLoadData(access_token_stored);
 		}
+	}
+
+	@Watch('selected')
+	onPropertChanged() {
+		this.drawer = false;
 	}
 
 	public SetAccessAndLoadData(access_token: string) {
@@ -809,6 +842,14 @@ export default class main extends Vue {
 	height: 100px;
 }
 
+.showResponsiveNav {
+	display: none;
+}
+
+.theme--light.v-btn.v-btn--icon {
+	color: white;
+}
+
 @media screen and (max-width: 1330px) {
 	.containerdiv {
 		background-color: #353535;
@@ -848,13 +889,13 @@ export default class main extends Vue {
 	}
 }
 
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 610px) {
 	.sidenav {
-		height: 200px;
-		overflow-y: auto;
-		top: 55px;
-		width: 100%;
-		font-size: small;
+		display: none;
+	}
+
+	.showResponsiveNav {
+		display: initial;
 	}
 
 	.containerdiv {
@@ -863,7 +904,6 @@ export default class main extends Vue {
 		height: auto;
 		margin-left: 0;
 		padding: 0;
-		margin-top: 255px;
 	}
 }
 
@@ -915,7 +955,7 @@ export default class main extends Vue {
 	}
 }
 
-@media (min-width: 544px) {
+@media (min-width: 610px) {
 	.sidenav {
 		bottom: 0;
 		left: 0;
