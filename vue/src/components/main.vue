@@ -5,9 +5,9 @@
 			href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css"
 			rel="stylesheet"
 		/>
-		<nav class="topNav navbar navbar-inverse navbar-fixed-top header">
+		<nav v-if="!searchMenuClicked" class="topNav navbar navbar-inverse navbar-fixed-top header">
 			<a class="navbar-brand" style="color: #1DB954">Spotify Playlist Merger</a>
-			<form class="form-inline" style="margin: 0 auto">
+			<form class="form-inline searchResponsive" style="margin: 0 auto">
 				<input
 					class="form-control mr-sm-2"
 					style="width: 30vw"
@@ -17,12 +17,29 @@
 					v-model="playlistSearchText"
 				/>
 			</form>
-			<v-btn icon class="showResponsiveNav">
+			<v-btn icon class="showResponsiveNav" @click.stop="searchMenuClicked = !searchMenuClicked">
 				<v-icon>search</v-icon>
 			</v-btn>
-			<v-btn icon class="showResponsiveNav">
-				<v-icon @click.stop="drawer = !drawer">menu</v-icon>
+			<v-btn icon class="showResponsiveNav" @click.stop="drawer = !drawer">
+				<v-icon>menu</v-icon>
 			</v-btn>
+		</nav>
+		<nav
+			v-if="searchMenuClicked"
+			class="showResponsiveSearch topNav navbar navbar-inverse navbar-fixed-top header"
+		>
+			<v-btn icon @click="searchMenuClicked = false">
+				<v-icon>arrow_back</v-icon>
+			</v-btn>
+			<form class="form-inline" style="width:85%">
+				<input
+					class="form-control mr-sm-2"
+					type="search"
+					placeholder="Search Playlists"
+					aria-label="Search"
+					v-model="playlistSearchText"
+				/>
+			</form>
 		</nav>
 		<div class="container-fluid">
 			<v-navigation-drawer v-model="drawer" absolute temporary class="showResponsiveNav">
@@ -390,7 +407,9 @@ export default class main extends Vue {
 	private topSongsTimeRange: any[] = [{ value: null, text: '--Select Top Songs & Range--' }, { value: 'long_term', text: 'Long Term (several years)' },
 	{ value: 'medium_term', text: 'Medium Term (last 6 months)' }, { value: 'short_term', text: 'Short Term (last month)' }];
 	private drawer: boolean = false;
+	private searchMenuClicked: boolean = false;
 	public created() {
+		window.addEventListener("resize", this.resiveEventHandler)
 		document.title = router.currentRoute.meta.title;
 		const URL: string = process.env.VUE_APP_FLASK_API_URL + 'getcachedtoken';
 		let access_token_stored = sessionStorage.getItem('access_token');
@@ -409,10 +428,16 @@ export default class main extends Vue {
 		}
 	}
 
-	@Watch('selected')
-	onPropertChanged() {
-		this.drawer = false;
+	public destroyed() {
+		window.removeEventListener("resize", this.resiveEventHandler)
 	}
+
+	public resiveEventHandler() {
+		if (window.innerWidth > 610) {
+			this.searchMenuClicked = false;
+		}
+	}
+
 
 	public SetAccessAndLoadData(access_token: string) {
 		spotify.setAccessToken(access_token);
@@ -814,7 +839,7 @@ export default class main extends Vue {
 .sidenav {
 	height: 100%;
 	position: fixed;
-	top: 55px;
+	top: 56px;
 	overflow-y: auto;
 	width: 300px;
 }
@@ -824,7 +849,7 @@ export default class main extends Vue {
 	min-height: 100vh;
 	height: auto;
 	margin-left: 300px;
-	margin-top: 55px;
+	margin-top: 54px;
 }
 
 .customcontainer {
@@ -857,7 +882,7 @@ export default class main extends Vue {
 		height: auto;
 		margin-left: 300px;
 		padding-right: 300px;
-		margin-top: 55px;
+		margin-top: 54px;
 	}
 }
 
@@ -889,6 +914,12 @@ export default class main extends Vue {
 	}
 }
 
+@media screen and (min-width: 611px) {
+	.showResponsiveSearch {
+		display: none;
+	}
+}
+
 @media screen and (max-width: 610px) {
 	.sidenav {
 		display: none;
@@ -896,6 +927,10 @@ export default class main extends Vue {
 
 	.showResponsiveNav {
 		display: initial;
+	}
+
+	.searchResponsive {
+		display: none;
 	}
 
 	.containerdiv {
@@ -921,7 +956,7 @@ export default class main extends Vue {
 	}
 
 	.containerdiv {
-		margin-top: 55px;
+		margin-top: 54px;
 		padding: 0.5em;
 	}
 }
