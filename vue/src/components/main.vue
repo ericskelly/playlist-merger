@@ -7,16 +7,14 @@
 		/>
 		<nav v-if="!searchMenuClicked" class="topNav navbar navbar-inverse navbar-fixed-top header">
 			<a class="navbar-brand" style="color: #1DB954">Spotify Playlist Merger</a>
-			<form class="form-inline searchResponsive" style="margin: 0 auto">
-				<input
-					class="form-control mr-sm-2"
-					style="width: 30vw"
-					type="search"
-					placeholder="Search Playlists"
-					aria-label="Search"
-					v-model="playlistSearchText"
-				/>
-			</form>
+			<input
+				class="form-control searchResponsive"
+				style="width: 30vw; margin: 0 auto"
+				type="search"
+				placeholder="Search Playlists"
+				aria-label="Search"
+				v-model="playlistSearchText"
+			/>
 			<v-btn icon class="showResponsiveNav" @click.stop="searchMenuClicked = !searchMenuClicked">
 				<v-icon>search</v-icon>
 			</v-btn>
@@ -31,22 +29,26 @@
 			<v-btn icon @click="searchMenuClicked = false">
 				<v-icon>arrow_back</v-icon>
 			</v-btn>
-			<form class="form-inline" style="width:85%">
-				<input
-					class="form-control mr-sm-2"
-					type="search"
-					placeholder="Search Playlists"
-					aria-label="Search"
-					v-model="playlistSearchText"
-				/>
-			</form>
+			<input
+				class="form-control mr-sm-2"
+				type="search"
+				style="width:85%;"
+				placeholder="Search Playlists"
+				aria-label="Search"
+				v-model="playlistSearchText"
+			/>
 		</nav>
 		<div class="container-fluid">
 			<v-navigation-drawer v-model="drawer" absolute temporary class="showResponsiveNav">
 				<v-list rounded style="background-color">
 					<v-subheader>
 						Playlists
-						<b-form-checkbox v-model="showSongs" switch style="margin-left: auto;">Songs</b-form-checkbox>
+						<b-form-checkbox
+							v-model="showSongs"
+							@change="ShowSongsDisplay()"
+							switch
+							style="margin-left: auto;"
+						>Songs</b-form-checkbox>
 					</v-subheader>
 					<v-list-item-group multiple v-model="selected" style="text-align: left">
 						<v-list-item
@@ -68,13 +70,18 @@
 					<v-list rounded style="background-color">
 						<v-subheader>
 							Playlists
-							<b-form-checkbox v-model="showSongs" switch style="margin-left: auto;">Songs</b-form-checkbox>
+							<b-form-checkbox
+								v-model="showSongs"
+								@change="ShowSongsDisplay()"
+								switch
+								style="margin-left: auto;"
+							>Songs</b-form-checkbox>
 						</v-subheader>
 						<v-list-item-group multiple v-model="selected" style="text-align: left">
 							<v-list-item
 								v-for="playlist in playlists"
 								v-bind:key="playlist.id"
-								@click="OpenPlayList(playlist)"
+								@change="OpenPlayList(playlist)"
 							>
 								<template>
 									<v-list-item-content>
@@ -87,55 +94,120 @@
 				</v-card>
 				<div class="col containerdiv">
 					<div class="customcontainer" v-if="playlistsLoaded">
-						<div class="globalMergeDiv">
-							<v-col cols="12" style="height:100%">
-								<v-row justify="center" style="height:100%">
-									<v-col cols="3">
-										<b-form-group label="Top Songs" label-for="dropdown-top-songs" style="color:white;">
-											<b-form-select
-												v-model="selectedTopSong"
-												id="globalTopSongsNumber"
-												size="sm"
-												:options="numbersOneToFifty"
-											></b-form-select>
-										</b-form-group>
+						<div class="defaultGlobalMerge">
+							<div class="globalMergeDiv">
+								<v-col cols="12" style="height:100%">
+									<v-row justify="center" style="height:100%">
+										<v-col cols="3">
+											<b-form-group label="Top Songs" label-for="dropdown-top-songs" style="color:white;">
+												<b-form-select
+													v-model="selectedTopSong"
+													id="globalTopSongsNumber"
+													size="sm"
+													:options="numbersOneToFifty"
+												></b-form-select>
+											</b-form-group>
+										</v-col>
+										<v-col cols="3">
+											<b-form-group
+												label="Top Songs Time Range"
+												label-for="dropdown-top-songs"
+												style="color:white;"
+											>
+												<b-form-select
+													:value="null"
+													id="topSongsTimeRange"
+													size="sm"
+													:options="topSongsTimeRange"
+													:disabled="selectedTopSong == null"
+												></b-form-select>
+											</b-form-group>
+										</v-col>
+										<v-col cols="3">
+											<b-form-group label="Genre" label-for="dropdown-form-genre" style="color:white;">
+												<b-form-input
+													id="globalGenreSelect"
+													list="genre-list"
+													size="sm"
+													placeholder="Enter Genre"
+												></b-form-input>
+												<b-form-datalist id="genre-list" v-bind:options="globalUniqueGenres"></b-form-datalist>
+											</b-form-group>
+										</v-col>
+										<v-col cols="3" style="position:relative; height:100%">
+											<button
+												type="submit"
+												class="btn btn-outline-success my-2 my-sm-0"
+												style="position:absolute; bottom:0; right: 5%;"
+												@click="PerformGlobalMerge()"
+											>Merge</button>
+										</v-col>
+									</v-row>
+								</v-col>
+							</div>
+						</div>
+						<div class="mergeDropDown">
+							<b-button
+								class="mergeDropDownButton"
+								v-b-toggle.collapse-global-merge
+								@click="RotateDropDown()"
+							>
+								Global Merge Options
+								<v-icon id="iconDown">arrow_drop_down</v-icon>
+								<v-icon style="display: none;" id="iconUp">arrow_drop_up</v-icon>
+							</b-button>
+							<b-collapse id="collapse-global-merge">
+								<div class="globalMergeDiv">
+									<v-col cols="12" style="height:100%">
+										<v-row justify="center" style="height:100%">
+											<v-col cols="3">
+												<b-form-group label="Top Songs" label-for="dropdown-top-songs" style="color:white;">
+													<b-form-select
+														v-model="selectedTopSong"
+														id="globalTopSongsNumber"
+														size="sm"
+														:options="numbersOneToFifty"
+													></b-form-select>
+												</b-form-group>
+											</v-col>
+											<v-col cols="3">
+												<b-form-group
+													label="Top Songs Time Range"
+													label-for="dropdown-top-songs"
+													style="color:white;"
+												>
+													<b-form-select
+														:value="null"
+														id="topSongsTimeRange"
+														size="sm"
+														:options="topSongsTimeRange"
+														:disabled="selectedTopSong == null"
+													></b-form-select>
+												</b-form-group>
+											</v-col>
+											<v-col cols="3">
+												<b-form-group label="Genre" label-for="dropdown-form-genre" style="color:white;">
+													<b-form-input
+														id="globalGenreSelect"
+														list="genre-list"
+														size="sm"
+														placeholder="Enter Genre"
+													></b-form-input>
+													<b-form-datalist id="genre-list" v-bind:options="globalUniqueGenres"></b-form-datalist>
+												</b-form-group>
+											</v-col>
+											<v-col cols="3" style="position:relative; height:100%">
+												<button
+													type="submit"
+													class="btn btn-outline-success my-2 my-sm-0"
+													style="position:absolute; bottom:0; right: 5%;"
+													@click="PerformGlobalMerge()"
+												>Merge</button>
+											</v-col>
+										</v-row>
 									</v-col>
-									<v-col cols="3">
-										<b-form-group
-											label="Top Songs Time Range"
-											label-for="dropdown-top-songs"
-											style="color:white;"
-										>
-											<b-form-select
-												:value="null"
-												id="topSongsTimeRange"
-												size="sm"
-												:options="topSongsTimeRange"
-												:disabled="selectedTopSong == null"
-											></b-form-select>
-										</b-form-group>
-									</v-col>
-									<v-col cols="3">
-										<b-form-group label="Genre" label-for="dropdown-form-genre" style="color:white;">
-											<b-form-input
-												id="globalGenreSelect"
-												list="genre-list"
-												size="sm"
-												placeholder="Enter Genre"
-											></b-form-input>
-											<b-form-datalist id="genre-list" v-bind:options="globalUniqueGenres"></b-form-datalist>
-										</b-form-group>
-									</v-col>
-									<v-col cols="3" style="position:relative; height:100%">
-										<button
-											type="submit"
-											class="btn btn-outline-success my-2 my-sm-0"
-											style="position:absolute; bottom:0; right: 5%;"
-											@click="PerformGlobalMerge()"
-										>Merge</button>
-									</v-col>
-								</v-row>
-							</v-col>
+								</div>
+							</b-collapse>
 						</div>
 						<v-row class="playlistsDiv">
 							<v-col cols="3" v-if="selectedSongsForMergeStack.playlistSongsSelectDisplay.length > 0">
@@ -222,15 +294,7 @@
 												}}
 											</v-chip>
 											<div>
-												<b-dropdown
-													id="dropdown-1"
-													offset="-120px"
-													size="sm"
-													text
-													class
-													no-caret
-													variant="transparent"
-												>
+												<b-dropdown id="dropdown-1" dropleft size="sm" no-caret variant="transparent">
 													<template v-slot:button-content>
 														<v-icon>settings</v-icon>
 													</template>
@@ -269,13 +333,12 @@
 										</div>
 									</v-card-title>
 									<v-divider></v-divider>
-									<v-list class="scrollStyle" max-height="500px" v-if="showSongs">
+									<v-list class="scrollStyle songList">
 										<v-list-item
 											two-line
 											v-for="songs in playlistSongsSelected[index].songs"
 											v-bind:key="songs.uri"
 											v-bind:style="[songs.highlight? { color: '#008000' } : { color: '#000000' }]"
-											style="text-align: left; max-height: 50px"
 										>
 											<v-list-item-content>
 												<v-list-item-title>{{songs.song}}</v-list-item-title>
@@ -408,6 +471,7 @@ export default class main extends Vue {
 	{ value: 'medium_term', text: 'Medium Term (last 6 months)' }, { value: 'short_term', text: 'Short Term (last month)' }];
 	private drawer: boolean = false;
 	private searchMenuClicked: boolean = false;
+	private globalMergeExpanded: boolean = false;
 	public created() {
 		window.addEventListener("resize", this.resiveEventHandler)
 		document.title = router.currentRoute.meta.title;
@@ -438,6 +502,38 @@ export default class main extends Vue {
 		}
 	}
 
+	public RotateDropDown() {
+		let iconDown: HTMLElement = document.getElementById("iconDown") as HTMLElement;
+		let iconUp: HTMLElement = document.getElementById("iconUp") as HTMLElement;
+		if (this.globalMergeExpanded) {
+			iconDown.style.display = "inherit";
+			iconUp.style.display = "none";
+		} else {
+			iconUp.style.display = "inherit";
+			iconDown.style.display = "none";
+		}
+
+		this.globalMergeExpanded = !this.globalMergeExpanded;
+	}
+
+	public ShowSongsDisplay() {
+		console.log('here');
+		if (this.showSongs == false) {
+			let songsElements = document.getElementsByClassName("songList") as HTMLCollectionOf<HTMLElement>;
+			console.log(songsElements);
+			for (let i = 0; i < songsElements.length; ++i) {
+				console.log(songsElements[i]);
+				songsElements[i].style.display = "inherit";
+			}
+		}
+		else {
+			let songsElements = document.getElementsByClassName("songList") as HTMLCollectionOf<HTMLElement>;
+			console.log(songsElements);
+			for (let i = 0; i < songsElements.length; ++i) {
+				songsElements[i].style.display = "none";
+			}
+		}
+	}
 
 	public SetAccessAndLoadData(access_token: string) {
 		spotify.setAccessToken(access_token);
@@ -871,6 +967,24 @@ export default class main extends Vue {
 	display: none;
 }
 
+.mergeDropDown {
+	display: none;
+	width: 100%;
+}
+
+.mergeDropDownButton {
+	width: 100%;
+}
+
+.songList {
+	max-height: 500px;
+}
+
+.songList .v-list-item {
+	text-align: left;
+	max-height: 50px;
+}
+
 .theme--light.v-btn.v-btn--icon {
 	color: white;
 }
@@ -940,6 +1054,14 @@ export default class main extends Vue {
 		margin-left: 0;
 		padding: 0;
 	}
+
+	.defaultGlobalMerge {
+		display: none;
+	}
+
+	.mergeDropDown {
+		display: initial;
+	}
 }
 
 @media screen and (max-width: 380px) {
@@ -949,6 +1071,7 @@ export default class main extends Vue {
 
 	.globalMergeDiv .col-3 {
 		min-width: 100%;
+		max-height: 90vh;
 	}
 
 	.sidenav {
@@ -958,6 +1081,16 @@ export default class main extends Vue {
 	.containerdiv {
 		margin-top: 54px;
 		padding: 0.5em;
+	}
+
+	.mergeDropDownButton {
+		display: initial;
+	}
+}
+
+@media screen and (max-height: 850px) {
+	.songList {
+		max-height: 50vh;
 	}
 }
 
