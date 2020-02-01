@@ -96,8 +96,8 @@
 					<div class="customcontainer" v-if="playlistsLoaded">
 						<div class="defaultGlobalMerge">
 							<div class="globalMergeDiv">
-								<v-col cols="12" style="height:100%">
-									<v-row justify="center" style="height:100%">
+								<v-col cols="12">
+									<v-row justify="center">
 										<v-col cols="3">
 											<b-form-group label="Top Songs" label-for="dropdown-top-songs" style="color:white;">
 												<b-form-select
@@ -138,10 +138,19 @@
 											<button
 												type="submit"
 												class="btn btn-outline-success my-2 my-sm-0"
-												style="position:absolute; bottom:0; right: 5%;"
+												style="position:absolute; top:0; right: 5%;"
 												@click="PerformGlobalMerge()"
 											>Merge</button>
 										</v-col>
+									</v-row>
+									<v-row>
+										<v-col cols="3">
+											<b-form-group label="Song Energy" style="color:white;">
+												<b-form-select :value="null" id="songEnergy" size="sm" :options="songEnergySelections"></b-form-select>
+											</b-form-group>
+										</v-col>
+										<v-col cols="3"></v-col>
+										<v-col cols="3"></v-col>
 									</v-row>
 								</v-col>
 							</div>
@@ -448,6 +457,10 @@ class selectedSongsForMergeHistoryStack {
 export default class main extends Vue {
 	private numbersOneToFifty: any[] = [{ value: null, text: '--Select a number--' }, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38,
 		39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
+	private topSongsTimeRange: any[] = [{ value: null, text: '--Select Top Songs & Range--' }, { value: 'long_term', text: 'Long Term (several years)' },
+	{ value: 'medium_term', text: 'Medium Term (last 6 months)' }, { value: 'short_term', text: 'Short Term (last month)' }];
+	private songEnergySelections: any[] = [{ value: null, text: '--Select Song Energy--' }, { value: 'low_energy', text: 'Low Energy' },
+	{ value: 'medium_energy', text: 'Medium Energy' }, { value: 'high_energy', text: 'High Energy' }];
 	private selectedTopSong: any = null;
 	private playlists: playlist[] = [];
 	private playlistSongsSelected: playlistSongs[] = [];
@@ -467,11 +480,10 @@ export default class main extends Vue {
 	private totalSongs: number = 0;
 	private selectedSongsForMergeStack: selectedSongsForMergeHistoryStack = new selectedSongsForMergeHistoryStack();
 	private playlistSearchText: string = '';
-	private topSongsTimeRange: any[] = [{ value: null, text: '--Select Top Songs & Range--' }, { value: 'long_term', text: 'Long Term (several years)' },
-	{ value: 'medium_term', text: 'Medium Term (last 6 months)' }, { value: 'short_term', text: 'Short Term (last month)' }];
 	private drawer: boolean = false;
 	private searchMenuClicked: boolean = false;
 	private globalMergeExpanded: boolean = false;
+
 	public created() {
 		window.addEventListener("resize", this.resiveEventHandler)
 		document.title = router.currentRoute.meta.title;
@@ -835,10 +847,75 @@ export default class main extends Vue {
 		}
 	}
 
+	//TODO: Save audio features results to check if already exists for any subsequent calls
+	public async GetSongsEnergy(songIds: string[], mergeCheck: boolean, songEnergySelected: string, fromAll?: any): Promise<Object> {
+		let fromAllTemp: any = new Object();
+		const playlistSongs: playlistItem[] = this.playlistSongsSelected.flatMap(x => x.songs);
+		const loopCount = Math.ceil(songIds.length / 100);
+		let promiseArray: Promise<any>[] = [];
+		let offset = 0;
+		for (let i = 0; i < loopCount; ++i) {
+			const partitionedSongIds = songIds.slice(offset, offset + 100);
+			promiseArray.push(spotify.getAudioFeaturesForTracks(partitionedSongIds));
+			offset += 100;
+		}
+		let songsAudioFeatures = await Promise.all(promiseArray);
+		songsAudioFeatures.forEach((promiseResponse) => {
+			promiseResponse.audio_features.forEach((audioFeature: any) => {
+				if (audioFeature && audioFeature.energy) {
+					const energyLevel = audioFeature.energy;
+					const playlistItemSong: playlistItem | undefined = playlistSongs.find(x => x.songId == audioFeature.id);
+					if (playlistItemSong) {
+						switch (songEnergySelected) {
+							case 'low_energy':
+								if (energyLevel < 0.4) {
+									if (mergeCheck) {
+										const inMergedValue = fromAll[audioFeature.uri];
+										if (inMergedValue) {
+											fromAllTemp[audioFeature.uri] = playlistItemSong;
+										}
+									} else {
+										fromAllTemp[audioFeature.uri] = playlistItemSong;
+									}
+								}
+								break;
+							case 'medium_energy':
+								if (energyLevel > 0.4 && energyLevel < 0.7) {
+									if (mergeCheck) {
+										const inMergedValue = fromAll[audioFeature.uri];
+										if (inMergedValue) {
+											fromAllTemp[audioFeature.uri] = playlistItemSong;
+										}
+									} else {
+										fromAllTemp[audioFeature.uri] = playlistItemSong;
+									}
+								}
+								break;
+							case 'high_energy':
+								if (energyLevel > 0.7) {
+									if (mergeCheck) {
+										const inMergedValue = fromAll[audioFeature.uri];
+										if (inMergedValue) {
+											fromAllTemp[audioFeature.uri] = playlistItemSong;
+										}
+									} else {
+										fromAllTemp[audioFeature.uri] = playlistItemSong;
+									}
+								}
+								break;
+						}
+					}
+				}
+			});
+		});
+		return fromAllTemp;
+	}
+
 	public async PerformGlobalMerge() {
 		const globalTopSongsNumber: number = Number((document.getElementById("globalTopSongsNumber") as HTMLInputElement).value);
 		const topSongsRange: string = String((document.getElementById("topSongsTimeRange") as HTMLInputElement).value);
 		const globalGenre: string = (document.getElementById("globalGenreSelect") as HTMLInputElement).value;
+		const songEnergySelected: string = (document.getElementById("songEnergy") as HTMLInputElement).value;
 
 		let artistsContainingGenre: string[] = [];
 
@@ -877,6 +954,31 @@ export default class main extends Vue {
 					fromAllTemp[song.uri] = song;
 				}
 			});
+			fromAll = fromAllTemp;
+		}
+
+		if (songEnergySelected) {
+			let songs: playlistItem[] = Object.values(fromAll);
+			let fromAllTemp: any = new Object();
+			if (songs.length > 0) {
+				let songIds: string[] = [];
+				songs.forEach(song => {
+					if (!songIds.includes(song.songId)) {
+						songIds.push(song.songId);
+					}
+				});
+				fromAllTemp = await this.GetSongsEnergy(songIds, true, songEnergySelected, fromAll);
+			} else {
+				let allSongIds: string[] = [];
+				this.playlistSongsSelected.forEach((playlist) => {
+					playlist.songs.forEach((song) => {
+						if (!allSongIds.includes(song.songId)) {
+							allSongIds.push(song.songId);
+						}
+					});
+				});
+				fromAllTemp = await this.GetSongsEnergy(allSongIds, false, songEnergySelected);
+			}
 			fromAll = fromAllTemp;
 		}
 
@@ -960,7 +1062,7 @@ export default class main extends Vue {
 
 .globalMergeDiv {
 	border: 1px solid #1db954;
-	height: 100px;
+	height: auto;
 }
 
 .showResponsiveNav {
