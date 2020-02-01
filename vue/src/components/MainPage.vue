@@ -134,23 +134,34 @@
 												<b-form-datalist id="genre-list" v-bind:options="globalUniqueGenres"></b-form-datalist>
 											</b-form-group>
 										</v-col>
-										<v-col cols="3" style="position:relative; height:100%">
-											<button
-												type="submit"
-												class="btn btn-outline-success my-2 my-sm-0"
-												style="position:absolute; top:0; right: 5%;"
-												@click="PerformGlobalMerge()"
-											>Merge</button>
-										</v-col>
-									</v-row>
-									<v-row>
 										<v-col cols="3">
 											<b-form-group label="Song Energy" style="color:white;">
 												<b-form-select :value="null" id="songEnergy" size="sm" :options="songEnergySelections"></b-form-select>
 											</b-form-group>
 										</v-col>
+									</v-row>
+									<v-row>
+										<v-col cols="3">
+											<b-form-group label="Song Valence" style="color:white;">
+												<b-form-select
+													:value="null"
+													id="songValence"
+													size="sm"
+													:options="songValenceSelections"
+												></b-form-select>
+											</b-form-group>
+										</v-col>
 										<v-col cols="3"></v-col>
-										<v-col cols="3"></v-col>
+									</v-row>
+									<v-row>
+										<v-col>
+											<button
+												type="submit"
+												class="btn btn-outline-success my-2 my-sm-0"
+												style="position:absolute; bottom: 0; right: 2%; float:right;"
+												@click="PerformGlobalMerge()"
+											>Merge</button>
+										</v-col>
 									</v-row>
 								</v-col>
 							</div>
@@ -413,6 +424,20 @@ interface topSongsPerPlaylist {
 	popularity: number;
 }
 
+interface songAudioFeatures {
+	songID: string;
+	songUri: string;
+	energyLevel: number;
+	danceability: number;
+	tempo: number;
+	valence: number;
+	speechiness: number;
+	loudness: number;
+	liveness: number;
+	instrumentalness: number;
+	acousticness: number;
+}
+
 class selectedSongsForMergeHistoryStack {
 	playlistSongsSelectDisplay: playlistItem[];
 	playlistSongsSelectList: Array<playlistItem[]>;
@@ -449,18 +474,18 @@ class selectedSongsForMergeHistoryStack {
 
 }
 
-//document.title = "Playlist Merger";
-
 @Component({
 	components: {}
 })
-export default class main extends Vue {
+export default class MainPage extends Vue {
 	private numbersOneToFifty: any[] = [{ value: null, text: '--Select a number--' }, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38,
 		39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
 	private topSongsTimeRange: any[] = [{ value: null, text: '--Select Top Songs & Range--' }, { value: 'long_term', text: 'Long Term (several years)' },
 	{ value: 'medium_term', text: 'Medium Term (last 6 months)' }, { value: 'short_term', text: 'Short Term (last month)' }];
 	private songEnergySelections: any[] = [{ value: null, text: '--Select Song Energy--' }, { value: 'low_energy', text: 'Low Energy' },
 	{ value: 'medium_energy', text: 'Medium Energy' }, { value: 'high_energy', text: 'High Energy' }];
+	private songValenceSelections: any[] = [{ value: null, text: '--Select Song Valence--' }, { value: 'positive', text: 'Positive Sounding' },
+	{ value: 'negative', text: 'Negative Sounding' }];
 	private selectedTopSong: any = null;
 	private playlists: playlist[] = [];
 	private playlistSongsSelected: playlistSongs[] = [];
@@ -483,6 +508,7 @@ export default class main extends Vue {
 	private drawer: boolean = false;
 	private searchMenuClicked: boolean = false;
 	private globalMergeExpanded: boolean = false;
+	private globalSongAudioFeatures: songAudioFeatures[] = [];
 
 	public created() {
 		window.addEventListener("resize", this.resiveEventHandler)
@@ -847,10 +873,100 @@ export default class main extends Vue {
 		}
 	}
 
-	//TODO: Save audio features results to check if already exists for any subsequent calls
-	public async GetSongsEnergy(songIds: string[], mergeCheck: boolean, songEnergySelected: string, fromAll?: any): Promise<Object> {
+	public GetSongsEnergy(songsAudioFeatures: songAudioFeatures[], mergeCheck: boolean, songEnergySelected: string, fromAll?: any): Object {
 		let fromAllTemp: any = new Object();
 		const playlistSongs: playlistItem[] = this.playlistSongsSelected.flatMap(x => x.songs);
+		songsAudioFeatures.forEach((audioFeature) => {
+			if (audioFeature && audioFeature.energyLevel) {
+				const energyLevel = audioFeature.energyLevel;
+				const playlistItemSong: playlistItem | undefined = playlistSongs.find(x => x.songId == audioFeature.songID);
+				if (playlistItemSong) {
+					switch (songEnergySelected) {
+						case 'low_energy':
+							if (energyLevel < 0.4) {
+								if (mergeCheck) {
+									const inMergedValue = fromAll[audioFeature.songUri];
+									if (inMergedValue) {
+										fromAllTemp[audioFeature.songUri] = playlistItemSong;
+									}
+								} else {
+									fromAllTemp[audioFeature.songUri] = playlistItemSong;
+								}
+							}
+							break;
+						case 'medium_energy':
+							if (energyLevel > 0.4 && energyLevel < 0.7) {
+								if (mergeCheck) {
+									const inMergedValue = fromAll[audioFeature.songUri];
+									if (inMergedValue) {
+										fromAllTemp[audioFeature.songUri] = playlistItemSong;
+									}
+								} else {
+									fromAllTemp[audioFeature.songUri] = playlistItemSong;
+								}
+							}
+							break;
+						case 'high_energy':
+							if (energyLevel > 0.7) {
+								if (mergeCheck) {
+									const inMergedValue = fromAll[audioFeature.songUri];
+									if (inMergedValue) {
+										fromAllTemp[audioFeature.songUri] = playlistItemSong;
+									}
+								} else {
+									fromAllTemp[audioFeature.songUri] = playlistItemSong;
+								}
+							}
+							break;
+					}
+				}
+			}
+		});
+		return fromAllTemp;
+	}
+
+	public GetSongsValence(songsAudioFeatures: songAudioFeatures[], mergeCheck: boolean, songValenceSelected: string, fromAll?: any): Object {
+		let fromAllTemp: any = new Object();
+		const playlistSongs: playlistItem[] = this.playlistSongsSelected.flatMap(x => x.songs);
+		songsAudioFeatures.forEach((audioFeature) => {
+			if (audioFeature && audioFeature.valence) {
+				const valence = audioFeature.valence;
+				const playlistItemSong: playlistItem | undefined = playlistSongs.find(x => x.songId == audioFeature.songID);
+				if (playlistItemSong) {
+					switch (songValenceSelected) {
+						case 'negative':
+							if (valence < 0.5) {
+								if (mergeCheck) {
+									const inMergedValue = fromAll[audioFeature.songUri];
+									if (inMergedValue) {
+										fromAllTemp[audioFeature.songUri] = playlistItemSong;
+									}
+								} else {
+									fromAllTemp[audioFeature.songUri] = playlistItemSong;
+								}
+							}
+							break;
+						case 'positive':
+							if (valence > 0.5) {
+								if (mergeCheck) {
+									const inMergedValue = fromAll[audioFeature.songUri];
+									if (inMergedValue) {
+										fromAllTemp[audioFeature.songUri] = playlistItemSong;
+									}
+								} else {
+									fromAllTemp[audioFeature.songUri] = playlistItemSong;
+								}
+							}
+							break;
+					}
+				}
+			}
+		});
+		return fromAllTemp;
+	}
+
+	public async GetAudioFeatures(songIds: string[]): Promise<songAudioFeatures[]> {
+		let songAudioFeatures: songAudioFeatures[] = [];
 		const loopCount = Math.ceil(songIds.length / 100);
 		let promiseArray: Promise<any>[] = [];
 		let offset = 0;
@@ -862,53 +978,17 @@ export default class main extends Vue {
 		let songsAudioFeatures = await Promise.all(promiseArray);
 		songsAudioFeatures.forEach((promiseResponse) => {
 			promiseResponse.audio_features.forEach((audioFeature: any) => {
-				if (audioFeature && audioFeature.energy) {
-					const energyLevel = audioFeature.energy;
-					const playlistItemSong: playlistItem | undefined = playlistSongs.find(x => x.songId == audioFeature.id);
-					if (playlistItemSong) {
-						switch (songEnergySelected) {
-							case 'low_energy':
-								if (energyLevel < 0.4) {
-									if (mergeCheck) {
-										const inMergedValue = fromAll[audioFeature.uri];
-										if (inMergedValue) {
-											fromAllTemp[audioFeature.uri] = playlistItemSong;
-										}
-									} else {
-										fromAllTemp[audioFeature.uri] = playlistItemSong;
-									}
-								}
-								break;
-							case 'medium_energy':
-								if (energyLevel > 0.4 && energyLevel < 0.7) {
-									if (mergeCheck) {
-										const inMergedValue = fromAll[audioFeature.uri];
-										if (inMergedValue) {
-											fromAllTemp[audioFeature.uri] = playlistItemSong;
-										}
-									} else {
-										fromAllTemp[audioFeature.uri] = playlistItemSong;
-									}
-								}
-								break;
-							case 'high_energy':
-								if (energyLevel > 0.7) {
-									if (mergeCheck) {
-										const inMergedValue = fromAll[audioFeature.uri];
-										if (inMergedValue) {
-											fromAllTemp[audioFeature.uri] = playlistItemSong;
-										}
-									} else {
-										fromAllTemp[audioFeature.uri] = playlistItemSong;
-									}
-								}
-								break;
-						}
-					}
+				if (audioFeature) {
+					const audioFeatureToAdd: songAudioFeatures = {
+						songID: audioFeature.id, songUri: audioFeature.uri, energyLevel: audioFeature.energy, danceability: audioFeature.danceability, acousticness: audioFeature.acousticness, instrumentalness: audioFeature.instrumentalness,
+						liveness: audioFeature.liveness, loudness: audioFeature.loudness, speechiness: audioFeature.speechiness, valence: audioFeature.valence,
+						tempo: audioFeature.tempo
+					};
+					songAudioFeatures.push(audioFeatureToAdd);
 				}
 			});
 		});
-		return fromAllTemp;
+		return songAudioFeatures;
 	}
 
 	public async PerformGlobalMerge() {
@@ -916,6 +996,16 @@ export default class main extends Vue {
 		const topSongsRange: string = String((document.getElementById("topSongsTimeRange") as HTMLInputElement).value);
 		const globalGenre: string = (document.getElementById("globalGenreSelect") as HTMLInputElement).value;
 		const songEnergySelected: string = (document.getElementById("songEnergy") as HTMLInputElement).value;
+		const songValenceSelected: string = (document.getElementById("songValence") as HTMLInputElement).value;
+		console.log(songValenceSelected);
+		let allSongIds: string[] = [];
+		this.playlistSongsSelected.forEach((playlist) => {
+			playlist.songs.forEach((song) => {
+				if (!allSongIds.includes(song.songId)) {
+					allSongIds.push(song.songId);
+				}
+			});
+		});
 
 		let artistsContainingGenre: string[] = [];
 
@@ -967,17 +1057,52 @@ export default class main extends Vue {
 						songIds.push(song.songId);
 					}
 				});
-				fromAllTemp = await this.GetSongsEnergy(songIds, true, songEnergySelected, fromAll);
+				if (this.globalSongAudioFeatures.length > 0) {
+					const audioFeatures: songAudioFeatures[] = this.globalSongAudioFeatures.filter(x => songIds.includes(x.songID));
+					fromAllTemp = this.GetSongsEnergy(audioFeatures, true, songEnergySelected, fromAll);
+				} else {
+					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(songIds);
+					fromAllTemp = this.GetSongsEnergy(audioFeatures, true, songEnergySelected, fromAll);
+				}
 			} else {
-				let allSongIds: string[] = [];
-				this.playlistSongsSelected.forEach((playlist) => {
-					playlist.songs.forEach((song) => {
-						if (!allSongIds.includes(song.songId)) {
-							allSongIds.push(song.songId);
-						}
-					});
+				if (this.globalSongAudioFeatures.length > 0) {
+					const audioFeatures: songAudioFeatures[] = this.globalSongAudioFeatures;
+					fromAllTemp = this.GetSongsEnergy(audioFeatures, false, songEnergySelected);
+				} else {
+					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(allSongIds);
+					fromAllTemp = await this.GetSongsEnergy(audioFeatures, false, songEnergySelected);
+					this.globalSongAudioFeatures = audioFeatures;
+				}
+			}
+			fromAll = fromAllTemp;
+		}
+
+		if (songValenceSelected) {
+			let songs: playlistItem[] = Object.values(fromAll);
+			let fromAllTemp: any = new Object();
+			if (songs.length > 0) {
+				let songIds: string[] = [];
+				songs.forEach(song => {
+					if (!songIds.includes(song.songId)) {
+						songIds.push(song.songId);
+					}
 				});
-				fromAllTemp = await this.GetSongsEnergy(allSongIds, false, songEnergySelected);
+				if (this.globalSongAudioFeatures.length > 0) {
+					const audioFeatures: songAudioFeatures[] = this.globalSongAudioFeatures.filter(x => songIds.includes(x.songID));
+					fromAllTemp = this.GetSongsValence(audioFeatures, true, songValenceSelected, fromAll);
+				} else {
+					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(songIds);
+					fromAllTemp = this.GetSongsValence(audioFeatures, true, songValenceSelected, fromAll);
+				}
+			} else {
+				if (this.globalSongAudioFeatures.length > 0) {
+					const audioFeatures: songAudioFeatures[] = this.globalSongAudioFeatures;
+					fromAllTemp = this.GetSongsValence(audioFeatures, false, songValenceSelected);
+				} else {
+					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(allSongIds);
+					fromAllTemp = await this.GetSongsValence(audioFeatures, false, songValenceSelected);
+					this.globalSongAudioFeatures = audioFeatures;
+				}
 			}
 			fromAll = fromAllTemp;
 		}
@@ -993,7 +1118,6 @@ export default class main extends Vue {
 				}
 			}
 		});
-
 
 		//TODO: Maybe make this a better popup dialog
 		if (songsMerged.length == 0) {

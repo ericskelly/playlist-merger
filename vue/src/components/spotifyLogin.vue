@@ -21,7 +21,7 @@ const spotify = new SpotifyWebApi();
 @Component({
 	components: {}
 })
-export default class spotifyLogin extends Vue {
+export default class SpotifyLogin extends Vue {
 	private params: any;
 	private URL: string = process.env.VUE_APP_FLASK_API_URL;
 	private refreshToken: string = '';

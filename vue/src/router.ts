@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import spotifyLogin from './components/spotifyLogin.vue';
-import main from './components/main.vue';
+import SpotifyLogin from './components/SpotifyLogin.vue';
+import MainPage from './components/MainPage.vue';
 
 Vue.use(Router);
 
@@ -11,14 +11,14 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'main',
-      component: main,
+      name: 'MainPage',
+      component: MainPage,
       meta: { title: 'Playlist Merger' },
     },
     {
       path: '/login',
-      name: 'spotifyLogin',
-      component: spotifyLogin,
+      name: 'SpotifyLogin',
+      component: SpotifyLogin,
       meta: { title: 'Playlist Merger - Login' },
     },
   ],
