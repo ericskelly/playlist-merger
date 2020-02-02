@@ -95,78 +95,91 @@
 				<div class="col containerdiv">
 					<div class="customcontainer" v-if="playlistsLoaded">
 						<div class="defaultGlobalMerge">
-							<div class="globalMergeDiv">
-								<v-col cols="12">
-									<v-row justify="center">
-										<v-col cols="3">
-											<b-form-group label="Top Songs" label-for="dropdown-top-songs" style="color:white;">
-												<b-form-select
-													v-model="selectedTopSong"
-													id="globalTopSongsNumber"
-													size="sm"
-													:options="numbersOneToFifty"
-												></b-form-select>
-											</b-form-group>
-										</v-col>
-										<v-col cols="3">
-											<b-form-group
-												label="Top Songs Time Range"
-												label-for="dropdown-top-songs"
-												style="color:white;"
-											>
-												<b-form-select
-													:value="null"
-													id="topSongsTimeRange"
-													size="sm"
-													:options="topSongsTimeRange"
-													:disabled="selectedTopSong == null"
-												></b-form-select>
-											</b-form-group>
-										</v-col>
-										<v-col cols="3">
-											<b-form-group label="Genre" label-for="dropdown-form-genre" style="color:white;">
-												<b-form-input
-													id="globalGenreSelect"
-													list="genre-list"
-													size="sm"
-													placeholder="Enter Genre"
-												></b-form-input>
-												<b-form-datalist id="genre-list" v-bind:options="globalUniqueGenres"></b-form-datalist>
-											</b-form-group>
-										</v-col>
-										<v-col cols="3">
-											<b-form-group label="Song Energy" style="color:white;">
-												<b-form-select :value="null" id="songEnergy" size="sm" :options="songEnergySelections"></b-form-select>
-											</b-form-group>
-										</v-col>
-									</v-row>
-									<v-row>
-										<v-col cols="3">
-											<b-form-group label="Song Valence" style="color:white;">
-												<b-form-select
-													:value="null"
-													id="songValence"
-													size="sm"
-													:options="songValenceSelections"
-												></b-form-select>
-											</b-form-group>
-										</v-col>
-										<v-col cols="3"></v-col>
-									</v-row>
-									<v-row>
-										<v-col>
-											<button
-												type="submit"
-												class="btn btn-outline-success my-2 my-sm-0"
-												style="position:absolute; bottom: 0; right: 2%; float:right;"
-												@click="PerformGlobalMerge()"
-											>Merge</button>
-										</v-col>
-									</v-row>
-								</v-col>
-							</div>
+							<b-button
+								class="mergeDropDownButton"
+								:class="globalMergeExpanded ? null : 'collapsed'"
+								:aria-expanded="globalMergeExpanded ? 'true' : 'false'"
+								aria-controls="collapse-global-merge"
+								@click="RotateDropDown()"
+							>
+								Global Merge Options
+								<v-icon id="iconDown">arrow_drop_down</v-icon>
+								<v-icon style="display: none;" id="iconUp">arrow_drop_up</v-icon>
+							</b-button>
+							<b-collapse v-model="globalMergeExpanded" id="collapse-global-merge">
+								<div class="globalMergeDiv">
+									<v-col cols="12">
+										<v-row justify="center">
+											<v-col cols="3">
+												<b-form-group label="Top Songs" label-for="dropdown-top-songs" style="color:white;">
+													<b-form-select
+														v-model="selectedTopSong"
+														id="globalTopSongsNumber"
+														size="sm"
+														:options="numbersOneToFifty"
+													></b-form-select>
+												</b-form-group>
+											</v-col>
+											<v-col cols="3">
+												<b-form-group
+													label="Top Songs Time Range"
+													label-for="dropdown-top-songs"
+													style="color:white;"
+												>
+													<b-form-select
+														:value="null"
+														id="topSongsTimeRange"
+														size="sm"
+														:options="topSongsTimeRange"
+														:disabled="selectedTopSong == null"
+													></b-form-select>
+												</b-form-group>
+											</v-col>
+											<v-col cols="3">
+												<b-form-group label="Genre" label-for="dropdown-form-genre" style="color:white;">
+													<b-form-input
+														id="globalGenreSelect"
+														list="genre-list"
+														size="sm"
+														placeholder="Enter Genre"
+													></b-form-input>
+													<b-form-datalist id="genre-list" v-bind:options="globalUniqueGenres"></b-form-datalist>
+												</b-form-group>
+											</v-col>
+											<v-col cols="3">
+												<b-form-group label="Song Energy" style="color:white;">
+													<b-form-select :value="null" id="songEnergy" size="sm" :options="songEnergySelections"></b-form-select>
+												</b-form-group>
+											</v-col>
+										</v-row>
+										<v-row>
+											<v-col cols="3">
+												<b-form-group label="Song Valence" style="color:white;">
+													<b-form-select
+														:value="null"
+														id="songValence"
+														size="sm"
+														:options="songValenceSelections"
+													></b-form-select>
+												</b-form-group>
+											</v-col>
+											<v-col cols="3"></v-col>
+										</v-row>
+										<v-row>
+											<v-col>
+												<button
+													type="submit"
+													class="btn btn-outline-success my-2 my-sm-0"
+													style="position:absolute; bottom: 0; right: 2%; float:right;"
+													@click="PerformGlobalMerge()"
+												>Merge</button>
+											</v-col>
+										</v-row>
+									</v-col>
+								</div>
+							</b-collapse>
 						</div>
-						<div class="mergeDropDown">
+						<!--<div class="mergeDropDown">
 							<b-button
 								class="mergeDropDownButton"
 								v-b-toggle.collapse-global-merge
@@ -228,7 +241,7 @@
 									</v-col>
 								</div>
 							</b-collapse>
-						</div>
+						</div>-->
 						<v-row class="playlistsDiv">
 							<v-col cols="3" v-if="selectedSongsForMergeStack.playlistSongsSelectDisplay.length > 0">
 								<v-card
@@ -484,8 +497,9 @@ export default class MainPage extends Vue {
 	{ value: 'medium_term', text: 'Medium Term (last 6 months)' }, { value: 'short_term', text: 'Short Term (last month)' }];
 	private songEnergySelections: any[] = [{ value: null, text: '--Select Song Energy--' }, { value: 'low_energy', text: 'Low Energy' },
 	{ value: 'medium_energy', text: 'Medium Energy' }, { value: 'high_energy', text: 'High Energy' }];
-	private songValenceSelections: any[] = [{ value: null, text: '--Select Song Valence--' }, { value: 'positive', text: 'Positive Sounding' },
-	{ value: 'negative', text: 'Negative Sounding' }];
+	private songValenceSelections: any[] = [{ value: null, text: '--Select Song Valence--' }, { value: 'most_positive', text: 'Most Positive Sounding' },
+	{ value: 'positive', text: 'Positive Sounding' }, { value: 'neutral', text: 'Neutral Sounding' }, { value: 'negative', text: 'Negative Sounding' },
+	{ value: 'most_negative', text: 'Most Negative Sounding' }];
 	private selectedTopSong: any = null;
 	private playlists: playlist[] = [];
 	private playlistSongsSelected: playlistSongs[] = [];
@@ -507,11 +521,12 @@ export default class MainPage extends Vue {
 	private playlistSearchText: string = '';
 	private drawer: boolean = false;
 	private searchMenuClicked: boolean = false;
-	private globalMergeExpanded: boolean = false;
+	private globalMergeExpanded: boolean = true;
 	private globalSongAudioFeatures: songAudioFeatures[] = [];
 
 	public created() {
-		window.addEventListener("resize", this.resiveEventHandler)
+		window.addEventListener("resize", this.resiveEventHandler);
+		if (window.innerWidth < 610) this.globalMergeExpanded = false;
 		document.title = router.currentRoute.meta.title;
 		const URL: string = process.env.VUE_APP_FLASK_API_URL + 'getcachedtoken';
 		let access_token_stored = sessionStorage.getItem('access_token');
@@ -537,6 +552,10 @@ export default class MainPage extends Vue {
 	public resiveEventHandler() {
 		if (window.innerWidth > 610) {
 			this.searchMenuClicked = false;
+			this.globalMergeExpanded = true;
+		}
+		if (window.innerWidth < 610) {
+			this.globalMergeExpanded = false;
 		}
 	}
 
@@ -550,23 +569,19 @@ export default class MainPage extends Vue {
 			iconUp.style.display = "inherit";
 			iconDown.style.display = "none";
 		}
-
+		console.log(this.globalMergeExpanded);
 		this.globalMergeExpanded = !this.globalMergeExpanded;
 	}
 
 	public ShowSongsDisplay() {
-		console.log('here');
 		if (this.showSongs == false) {
 			let songsElements = document.getElementsByClassName("songList") as HTMLCollectionOf<HTMLElement>;
-			console.log(songsElements);
 			for (let i = 0; i < songsElements.length; ++i) {
-				console.log(songsElements[i]);
 				songsElements[i].style.display = "inherit";
 			}
 		}
 		else {
 			let songsElements = document.getElementsByClassName("songList") as HTMLCollectionOf<HTMLElement>;
-			console.log(songsElements);
 			for (let i = 0; i < songsElements.length; ++i) {
 				songsElements[i].style.display = "none";
 			}
@@ -873,6 +888,7 @@ export default class MainPage extends Vue {
 		}
 	}
 
+	//#region - Global Merge Functionality
 	public GetSongsEnergy(songsAudioFeatures: songAudioFeatures[], mergeCheck: boolean, songEnergySelected: string, fromAll?: any): Object {
 		let fromAllTemp: any = new Object();
 		const playlistSongs: playlistItem[] = this.playlistSongsSelected.flatMap(x => x.songs);
@@ -935,7 +951,7 @@ export default class MainPage extends Vue {
 				if (playlistItemSong) {
 					switch (songValenceSelected) {
 						case 'negative':
-							if (valence < 0.5) {
+							if (valence < 0.4) {
 								if (mergeCheck) {
 									const inMergedValue = fromAll[audioFeature.songUri];
 									if (inMergedValue) {
@@ -947,7 +963,7 @@ export default class MainPage extends Vue {
 							}
 							break;
 						case 'positive':
-							if (valence > 0.5) {
+							if (valence > 0.6) {
 								if (mergeCheck) {
 									const inMergedValue = fromAll[audioFeature.songUri];
 									if (inMergedValue) {
@@ -958,6 +974,39 @@ export default class MainPage extends Vue {
 								}
 							}
 							break;
+						case 'neutral':
+							if (valence > 0.4 && valence < 0.6) {
+								if (mergeCheck) {
+									const inMergedValue = fromAll[audioFeature.songUri];
+									if (inMergedValue) {
+										fromAllTemp[audioFeature.songUri] = playlistItemSong;
+									}
+								} else {
+									fromAllTemp[audioFeature.songUri] = playlistItemSong;
+								}
+							}
+						case 'most_positive':
+							if (valence > 0.8) {
+								if (mergeCheck) {
+									const inMergedValue = fromAll[audioFeature.songUri];
+									if (inMergedValue) {
+										fromAllTemp[audioFeature.songUri] = playlistItemSong;
+									}
+								} else {
+									fromAllTemp[audioFeature.songUri] = playlistItemSong;
+								}
+							}
+						case 'most_negative':
+							if (valence < 0.2) {
+								if (mergeCheck) {
+									const inMergedValue = fromAll[audioFeature.songUri];
+									if (inMergedValue) {
+										fromAllTemp[audioFeature.songUri] = playlistItemSong;
+									}
+								} else {
+									fromAllTemp[audioFeature.songUri] = playlistItemSong;
+								}
+							}
 					}
 				}
 			}
@@ -997,7 +1046,6 @@ export default class MainPage extends Vue {
 		const globalGenre: string = (document.getElementById("globalGenreSelect") as HTMLInputElement).value;
 		const songEnergySelected: string = (document.getElementById("songEnergy") as HTMLInputElement).value;
 		const songValenceSelected: string = (document.getElementById("songValence") as HTMLInputElement).value;
-		console.log(songValenceSelected);
 		let allSongIds: string[] = [];
 		this.playlistSongsSelected.forEach((playlist) => {
 			playlist.songs.forEach((song) => {
@@ -1126,10 +1174,13 @@ export default class MainPage extends Vue {
 
 		this.AddToMergedHistory(songsMerged);
 	}
+	//#endregion
 
 	public UndoLastMerge() {
+		console.log(this.selectedSongsForMergeStack.playlistSongsSelectDisplay);
 		if (!this.selectedSongsForMergeStack.IsEmpty()) {
 			const length: number = this.selectedSongsForMergeStack.GetLength();
+			console.log(length);
 			if (length < 2) {
 				this.selectedSongsForMergeStack.playlistSongsSelectDisplay = [];
 			} else {
@@ -1147,6 +1198,7 @@ export default class MainPage extends Vue {
 			return playlist.playlistName.toLowerCase().includes(this.playlistSearchText.toLowerCase());
 		})
 	}
+
 }
 </script>
 
@@ -1191,11 +1243,6 @@ export default class MainPage extends Vue {
 
 .showResponsiveNav {
 	display: none;
-}
-
-.mergeDropDown {
-	display: none;
-	width: 100%;
 }
 
 .mergeDropDownButton {
@@ -1279,14 +1326,6 @@ export default class MainPage extends Vue {
 		height: auto;
 		margin-left: 0;
 		padding: 0;
-	}
-
-	.defaultGlobalMerge {
-		display: none;
-	}
-
-	.mergeDropDown {
-		display: initial;
 	}
 }
 
