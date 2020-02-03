@@ -103,8 +103,14 @@
 								@click="RotateDropDown()"
 							>
 								Global Merge Options
-								<v-icon id="iconDown">arrow_drop_down</v-icon>
-								<v-icon style="display: none;" id="iconUp">arrow_drop_up</v-icon>
+								<v-icon
+									:style="[globalMergeExpanded ? {display: 'none'} : {display: 'initial'}]"
+									id="iconDown"
+								>arrow_drop_down</v-icon>
+								<v-icon
+									:style="[globalMergeExpanded ? {display: 'initial'} : {display: 'none'}]"
+									id="iconUp"
+								>arrow_drop_up</v-icon>
 							</b-button>
 							<b-collapse v-model="globalMergeExpanded" id="collapse-global-merge">
 								<div class="globalMergeDiv">
@@ -163,7 +169,26 @@
 													></b-form-select>
 												</b-form-group>
 											</v-col>
-											<v-col cols="3"></v-col>
+											<v-col cols="3">
+												<b-form inline>
+													<b-form-group label="Tempo(BPM)" class="formGroup" style="max-width:100%">
+														<b-form-input
+															type="number"
+															id="minTempo"
+															size="sm"
+															placeholder="Min Tempo"
+															style="width:40%; margin-right:5%"
+														></b-form-input>to
+														<b-form-input
+															type="number"
+															id="maxTempo"
+															size="sm"
+															placeholder="Max Tempo"
+															style="width:40%; margin-left:5%"
+														></b-form-input>
+													</b-form-group>
+												</b-form>
+											</v-col>
 										</v-row>
 										<v-row>
 											<v-col>
@@ -179,69 +204,6 @@
 								</div>
 							</b-collapse>
 						</div>
-						<!--<div class="mergeDropDown">
-							<b-button
-								class="mergeDropDownButton"
-								v-b-toggle.collapse-global-merge
-								@click="RotateDropDown()"
-							>
-								Global Merge Options
-								<v-icon id="iconDown">arrow_drop_down</v-icon>
-								<v-icon style="display: none;" id="iconUp">arrow_drop_up</v-icon>
-							</b-button>
-							<b-collapse id="collapse-global-merge">
-								<div class="globalMergeDiv">
-									<v-col cols="12" style="height:100%">
-										<v-row justify="center" style="height:100%">
-											<v-col cols="3">
-												<b-form-group label="Top Songs" label-for="dropdown-top-songs" style="color:white;">
-													<b-form-select
-														v-model="selectedTopSong"
-														id="globalTopSongsNumber"
-														size="sm"
-														:options="numbersOneToFifty"
-													></b-form-select>
-												</b-form-group>
-											</v-col>
-											<v-col cols="3">
-												<b-form-group
-													label="Top Songs Time Range"
-													label-for="dropdown-top-songs"
-													style="color:white;"
-												>
-													<b-form-select
-														:value="null"
-														id="topSongsTimeRange"
-														size="sm"
-														:options="topSongsTimeRange"
-														:disabled="selectedTopSong == null"
-													></b-form-select>
-												</b-form-group>
-											</v-col>
-											<v-col cols="3">
-												<b-form-group label="Genre" label-for="dropdown-form-genre" style="color:white;">
-													<b-form-input
-														id="globalGenreSelect"
-														list="genre-list"
-														size="sm"
-														placeholder="Enter Genre"
-													></b-form-input>
-													<b-form-datalist id="genre-list" v-bind:options="globalUniqueGenres"></b-form-datalist>
-												</b-form-group>
-											</v-col>
-											<v-col cols="3" style="position:relative; height:100%">
-												<button
-													type="submit"
-													class="btn btn-outline-success my-2 my-sm-0"
-													style="position:absolute; bottom:0; right: 5%;"
-													@click="PerformGlobalMerge()"
-												>Merge</button>
-											</v-col>
-										</v-row>
-									</v-col>
-								</div>
-							</b-collapse>
-						</div>-->
 						<v-row class="playlistsDiv">
 							<v-col cols="3" v-if="selectedSongsForMergeStack.playlistSongsSelectDisplay.length > 0">
 								<v-card
@@ -256,10 +218,7 @@
 										<div style="display: flex; justify-content: space-between; width: 100%">
 											<v-chip outlined>Merged Playlist</v-chip>
 											<div data-app>
-												<!--<v-btn color="primary" dark @click="dialog = true"></v-btn>-->
-
 												<v-icon color="primary" dark @click="dialog = true">create</v-icon>
-
 												<v-dialog v-model="dialog" max-width="500">
 													<v-card>
 														<v-card-title class="headline">Create Playlist</v-card-title>
@@ -523,6 +482,7 @@ export default class MainPage extends Vue {
 	private searchMenuClicked: boolean = false;
 	private globalMergeExpanded: boolean = true;
 	private globalSongAudioFeatures: songAudioFeatures[] = [];
+	private tempoRange: any = [50, 100];
 
 	public created() {
 		window.addEventListener("resize", this.resiveEventHandler);
@@ -569,7 +529,6 @@ export default class MainPage extends Vue {
 			iconUp.style.display = "inherit";
 			iconDown.style.display = "none";
 		}
-		console.log(this.globalMergeExpanded);
 		this.globalMergeExpanded = !this.globalMergeExpanded;
 	}
 
@@ -889,7 +848,7 @@ export default class MainPage extends Vue {
 	}
 
 	//#region - Global Merge Functionality
-	public GetSongsEnergy(songsAudioFeatures: songAudioFeatures[], mergeCheck: boolean, songEnergySelected: string, fromAll?: any): Object {
+	public MergeSongsEnergy(songsAudioFeatures: songAudioFeatures[], mergeCheck: boolean, songEnergySelected: string, fromAll?: any): Object {
 		let fromAllTemp: any = new Object();
 		const playlistSongs: playlistItem[] = this.playlistSongsSelected.flatMap(x => x.songs);
 		songsAudioFeatures.forEach((audioFeature) => {
@@ -941,7 +900,7 @@ export default class MainPage extends Vue {
 		return fromAllTemp;
 	}
 
-	public GetSongsValence(songsAudioFeatures: songAudioFeatures[], mergeCheck: boolean, songValenceSelected: string, fromAll?: any): Object {
+	public MergeSongsValence(songsAudioFeatures: songAudioFeatures[], mergeCheck: boolean, songValenceSelected: string, fromAll?: any): Object {
 		let fromAllTemp: any = new Object();
 		const playlistSongs: playlistItem[] = this.playlistSongsSelected.flatMap(x => x.songs);
 		songsAudioFeatures.forEach((audioFeature) => {
@@ -1014,6 +973,30 @@ export default class MainPage extends Vue {
 		return fromAllTemp;
 	}
 
+	public MergeSongsTempo(songsAudioFeatures: songAudioFeatures[], mergeCheck: boolean, minTempo: string, maxTempo: string, fromAll?: any): Object {
+		let fromAllTemp: any = new Object();
+		const playlistSongs: playlistItem[] = this.playlistSongsSelected.flatMap(x => x.songs);
+		songsAudioFeatures.forEach((audioFeature) => {
+			if (audioFeature && audioFeature.tempo) {
+				const tempo = audioFeature.tempo;
+				const playlistItemSong: playlistItem | undefined = playlistSongs.find(x => x.songId == audioFeature.songID);
+				if (playlistItemSong) {
+					if (tempo > Number(minTempo) && tempo < Number(maxTempo)) {
+						if (mergeCheck) {
+							const inMergedValue = fromAll[audioFeature.songUri];
+							if (inMergedValue) {
+								fromAllTemp[audioFeature.songUri] = playlistItemSong;
+							}
+						} else {
+							fromAllTemp[audioFeature.songUri] = playlistItemSong;
+						}
+					}
+				}
+			}
+		});
+		return fromAllTemp;
+	}
+
 	public async GetAudioFeatures(songIds: string[]): Promise<songAudioFeatures[]> {
 		let songAudioFeatures: songAudioFeatures[] = [];
 		const loopCount = Math.ceil(songIds.length / 100);
@@ -1046,6 +1029,9 @@ export default class MainPage extends Vue {
 		const globalGenre: string = (document.getElementById("globalGenreSelect") as HTMLInputElement).value;
 		const songEnergySelected: string = (document.getElementById("songEnergy") as HTMLInputElement).value;
 		const songValenceSelected: string = (document.getElementById("songValence") as HTMLInputElement).value;
+		const minTempo: string = (document.getElementById("minTempo") as HTMLInputElement).value;
+		const maxTempo: string = (document.getElementById("maxTempo") as HTMLInputElement).value;
+
 		let allSongIds: string[] = [];
 		this.playlistSongsSelected.forEach((playlist) => {
 			playlist.songs.forEach((song) => {
@@ -1107,18 +1093,18 @@ export default class MainPage extends Vue {
 				});
 				if (this.globalSongAudioFeatures.length > 0) {
 					const audioFeatures: songAudioFeatures[] = this.globalSongAudioFeatures.filter(x => songIds.includes(x.songID));
-					fromAllTemp = this.GetSongsEnergy(audioFeatures, true, songEnergySelected, fromAll);
+					fromAllTemp = this.MergeSongsEnergy(audioFeatures, true, songEnergySelected, fromAll);
 				} else {
 					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(songIds);
-					fromAllTemp = this.GetSongsEnergy(audioFeatures, true, songEnergySelected, fromAll);
+					fromAllTemp = this.MergeSongsEnergy(audioFeatures, true, songEnergySelected, fromAll);
 				}
 			} else {
 				if (this.globalSongAudioFeatures.length > 0) {
 					const audioFeatures: songAudioFeatures[] = this.globalSongAudioFeatures;
-					fromAllTemp = this.GetSongsEnergy(audioFeatures, false, songEnergySelected);
+					fromAllTemp = this.MergeSongsEnergy(audioFeatures, false, songEnergySelected);
 				} else {
 					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(allSongIds);
-					fromAllTemp = await this.GetSongsEnergy(audioFeatures, false, songEnergySelected);
+					fromAllTemp = await this.MergeSongsEnergy(audioFeatures, false, songEnergySelected);
 					this.globalSongAudioFeatures = audioFeatures;
 				}
 			}
@@ -1137,18 +1123,48 @@ export default class MainPage extends Vue {
 				});
 				if (this.globalSongAudioFeatures.length > 0) {
 					const audioFeatures: songAudioFeatures[] = this.globalSongAudioFeatures.filter(x => songIds.includes(x.songID));
-					fromAllTemp = this.GetSongsValence(audioFeatures, true, songValenceSelected, fromAll);
+					fromAllTemp = this.MergeSongsValence(audioFeatures, true, songValenceSelected, fromAll);
 				} else {
 					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(songIds);
-					fromAllTemp = this.GetSongsValence(audioFeatures, true, songValenceSelected, fromAll);
+					fromAllTemp = this.MergeSongsValence(audioFeatures, true, songValenceSelected, fromAll);
 				}
 			} else {
 				if (this.globalSongAudioFeatures.length > 0) {
 					const audioFeatures: songAudioFeatures[] = this.globalSongAudioFeatures;
-					fromAllTemp = this.GetSongsValence(audioFeatures, false, songValenceSelected);
+					fromAllTemp = this.MergeSongsValence(audioFeatures, false, songValenceSelected);
 				} else {
 					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(allSongIds);
-					fromAllTemp = await this.GetSongsValence(audioFeatures, false, songValenceSelected);
+					fromAllTemp = await this.MergeSongsValence(audioFeatures, false, songValenceSelected);
+					this.globalSongAudioFeatures = audioFeatures;
+				}
+			}
+			fromAll = fromAllTemp;
+		}
+
+		if (minTempo && maxTempo) {
+			let songs: playlistItem[] = Object.values(fromAll);
+			let fromAllTemp: any = new Object();
+			if (songs.length > 0) {
+				let songIds: string[] = [];
+				songs.forEach(song => {
+					if (!songIds.includes(song.songId)) {
+						songIds.push(song.songId);
+					}
+				});
+				if (this.globalSongAudioFeatures.length > 0) {
+					const audioFeatures: songAudioFeatures[] = this.globalSongAudioFeatures.filter(x => songIds.includes(x.songID));
+					fromAllTemp = this.MergeSongsTempo(audioFeatures, true, minTempo, maxTempo, fromAll);
+				} else {
+					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(songIds);
+					fromAllTemp = this.MergeSongsTempo(audioFeatures, true, minTempo, maxTempo, fromAll);
+				}
+			} else {
+				if (this.globalSongAudioFeatures.length > 0) {
+					const audioFeatures: songAudioFeatures[] = this.globalSongAudioFeatures;
+					fromAllTemp = this.MergeSongsTempo(audioFeatures, false, minTempo, maxTempo);
+				} else {
+					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(allSongIds);
+					fromAllTemp = this.MergeSongsTempo(audioFeatures, false, minTempo, maxTempo);
 					this.globalSongAudioFeatures = audioFeatures;
 				}
 			}
@@ -1177,10 +1193,8 @@ export default class MainPage extends Vue {
 	//#endregion
 
 	public UndoLastMerge() {
-		console.log(this.selectedSongsForMergeStack.playlistSongsSelectDisplay);
 		if (!this.selectedSongsForMergeStack.IsEmpty()) {
 			const length: number = this.selectedSongsForMergeStack.GetLength();
-			console.log(length);
 			if (length < 2) {
 				this.selectedSongsForMergeStack.playlistSongsSelectDisplay = [];
 			} else {
@@ -1259,6 +1273,10 @@ export default class MainPage extends Vue {
 }
 
 .theme--light.v-btn.v-btn--icon {
+	color: white;
+}
+
+.formGroup {
 	color: white;
 }
 
