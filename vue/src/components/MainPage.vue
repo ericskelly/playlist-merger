@@ -153,14 +153,14 @@
 												</b-form-group>
 											</v-col>
 											<v-col cols="3">
-												<b-form-group label="Song Energy" style="color:white;">
+												<b-form-group label="Energy" style="color:white;">
 													<b-form-select :value="null" id="songEnergy" size="sm" :options="songEnergySelections"></b-form-select>
 												</b-form-group>
 											</v-col>
 										</v-row>
 										<v-row>
 											<v-col cols="3">
-												<b-form-group label="Song Valence" style="color:white;">
+												<b-form-group label="Valence" style="color:white;">
 													<b-form-select
 														:value="null"
 														id="songValence"
@@ -170,24 +170,30 @@
 												</b-form-group>
 											</v-col>
 											<v-col cols="3">
-												<b-form inline>
-													<b-form-group label="Tempo(BPM)" class="formGroup" style="max-width:100%">
+												<b-form-group label="Tempo(BPM)" class="formGroup">
+													<div class="gridStyle">
+														<label style="text-align:right;">Min</label>
 														<b-form-input
-															type="number"
 															id="minTempo"
-															size="sm"
-															placeholder="Min Tempo"
-															style="width:40%; margin-right:5%"
-														></b-form-input>to
-														<b-form-input
-															type="number"
-															id="maxTempo"
-															size="sm"
-															placeholder="Max Tempo"
-															style="width:40%; margin-left:5%"
+															type="range"
+															min="0"
+															max="300"
+															v-model="minTempo"
+															step="5"
 														></b-form-input>
-													</b-form-group>
-												</b-form>
+														<label style="text-align:left;">{{minTempo}}</label>
+														<label style="text-align:right;">Max</label>
+														<b-form-input
+															id="maxTempo"
+															type="range"
+															min="0"
+															max="300"
+															v-model="maxTempo"
+															step="5"
+														></b-form-input>
+														<label style="text-align:left;">{{maxTempo}}</label>
+													</div>
+												</b-form-group>
 											</v-col>
 										</v-row>
 										<v-row>
@@ -482,7 +488,8 @@ export default class MainPage extends Vue {
 	private searchMenuClicked: boolean = false;
 	private globalMergeExpanded: boolean = true;
 	private globalSongAudioFeatures: songAudioFeatures[] = [];
-	private tempoRange: any = [50, 100];
+	private minTempo: number = 0;
+	private maxTempo: number = 0;
 
 	public created() {
 		window.addEventListener("resize", this.resiveEventHandler);
@@ -973,7 +980,7 @@ export default class MainPage extends Vue {
 		return fromAllTemp;
 	}
 
-	public MergeSongsTempo(songsAudioFeatures: songAudioFeatures[], mergeCheck: boolean, minTempo: string, maxTempo: string, fromAll?: any): Object {
+	public MergeSongsTempo(songsAudioFeatures: songAudioFeatures[], mergeCheck: boolean, minTempo: number, maxTempo: number, fromAll?: any): Object {
 		let fromAllTemp: any = new Object();
 		const playlistSongs: playlistItem[] = this.playlistSongsSelected.flatMap(x => x.songs);
 		songsAudioFeatures.forEach((audioFeature) => {
@@ -981,7 +988,7 @@ export default class MainPage extends Vue {
 				const tempo = audioFeature.tempo;
 				const playlistItemSong: playlistItem | undefined = playlistSongs.find(x => x.songId == audioFeature.songID);
 				if (playlistItemSong) {
-					if (tempo > Number(minTempo) && tempo < Number(maxTempo)) {
+					if (tempo > minTempo && tempo < maxTempo) {
 						if (mergeCheck) {
 							const inMergedValue = fromAll[audioFeature.songUri];
 							if (inMergedValue) {
@@ -1029,8 +1036,10 @@ export default class MainPage extends Vue {
 		const globalGenre: string = (document.getElementById("globalGenreSelect") as HTMLInputElement).value;
 		const songEnergySelected: string = (document.getElementById("songEnergy") as HTMLInputElement).value;
 		const songValenceSelected: string = (document.getElementById("songValence") as HTMLInputElement).value;
-		const minTempo: string = (document.getElementById("minTempo") as HTMLInputElement).value;
-		const maxTempo: string = (document.getElementById("maxTempo") as HTMLInputElement).value;
+		//const minTempo: string = (document.getElementById("minTempo") as HTMLInputElement).value;
+		//const maxTempo: string = (document.getElementById("maxTempo") as HTMLInputElement).value;
+		const minTempo: number = this.minTempo;
+		const maxTempo: number = this.maxTempo;
 
 		let allSongIds: string[] = [];
 		this.playlistSongsSelected.forEach((playlist) => {
@@ -1141,7 +1150,7 @@ export default class MainPage extends Vue {
 			fromAll = fromAllTemp;
 		}
 
-		if (minTempo && maxTempo) {
+		if (minTempo > 0 || maxTempo > 0 && (minTempo <= maxTempo)) {
 			let songs: playlistItem[] = Object.values(fromAll);
 			let fromAllTemp: any = new Object();
 			if (songs.length > 0) {
@@ -1278,6 +1287,13 @@ export default class MainPage extends Vue {
 
 .formGroup {
 	color: white;
+	margin-top: -20px;
+}
+
+.gridStyle {
+	display: grid;
+	grid-template-columns: 12% 75% 12%;
+	grid-gap: 5px;
 }
 
 @media screen and (max-width: 1330px) {
