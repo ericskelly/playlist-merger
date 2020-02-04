@@ -519,10 +519,10 @@ export default class MainPage extends Vue {
 	public resiveEventHandler() {
 		if (window.innerWidth > 610) {
 			this.searchMenuClicked = false;
-			this.globalMergeExpanded = true;
+			//this.globalMergeExpanded = true;
 		}
 		if (window.innerWidth < 610) {
-			this.globalMergeExpanded = false;
+			//this.globalMergeExpanded = false;
 		}
 	}
 
