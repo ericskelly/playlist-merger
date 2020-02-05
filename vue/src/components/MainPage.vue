@@ -117,14 +117,6 @@
 									<v-col cols="12">
 										<v-row justify="center">
 											<v-col cols="3">
-												<!--<b-form-group label="Top Songs" label-for="dropdown-top-songs" style="color:white;" >										
-													<b-form-select
-														v-model="selectedTopSong"
-														id="globalTopSongsNumber"
-														size="sm"
-														:options="numbersOneToFifty"
-													></b-form-select>
-												</b-form-group>-->
 												<div class="globalMergeLabelDiv">
 													<label>Top Songs</label>
 													<v-icon id="topSongsTooltip" small>info</v-icon>
