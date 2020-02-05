@@ -117,83 +117,125 @@
 									<v-col cols="12">
 										<v-row justify="center">
 											<v-col cols="3">
-												<b-form-group label="Top Songs" label-for="dropdown-top-songs" style="color:white;">
+												<!--<b-form-group label="Top Songs" label-for="dropdown-top-songs" style="color:white;" >										
 													<b-form-select
 														v-model="selectedTopSong"
 														id="globalTopSongsNumber"
 														size="sm"
 														:options="numbersOneToFifty"
 													></b-form-select>
-												</b-form-group>
+												</b-form-group>-->
+												<div class="globalMergeLabelDiv">
+													<label>Top Songs</label>
+													<v-icon id="topSongsTooltip" small>info</v-icon>
+												</div>
+												<b-form-select
+													v-model="selectedTopSong"
+													id="globalTopSongsNumber"
+													size="sm"
+													:options="numbersOneToFifty"
+												></b-form-select>
+												<b-tooltip
+													target="topSongsTooltip"
+													triggers="hover"
+												>Your top songs based on spotify personalization.</b-tooltip>
 											</v-col>
 											<v-col cols="3">
-												<b-form-group
-													label="Top Songs Time Range"
-													label-for="dropdown-top-songs"
-													style="color:white;"
-												>
-													<b-form-select
-														:value="null"
-														id="topSongsTimeRange"
-														size="sm"
-														:options="topSongsTimeRange"
-														:disabled="selectedTopSong == null"
-													></b-form-select>
-												</b-form-group>
+												<div class="globalMergeLabelDiv">
+													<label>Top Songs Time Range</label>
+													<v-icon id="topSongsRangeTooltip" small>info</v-icon>
+												</div>
+												<b-form-select
+													:value="null"
+													id="topSongsTimeRange"
+													size="sm"
+													:options="topSongsTimeRange"
+													:disabled="selectedTopSong == null"
+												></b-form-select>
+												<b-tooltip
+													target="topSongsRangeTooltip"
+													triggers="hover"
+												>The time range on which your top songs selection is based (default is medium term).</b-tooltip>
 											</v-col>
 											<v-col cols="3">
-												<b-form-group label="Genre" label-for="dropdown-form-genre" style="color:white;">
-													<b-form-input
-														id="globalGenreSelect"
-														list="genre-list"
-														size="sm"
-														placeholder="Enter Genre"
-													></b-form-input>
-													<b-form-datalist id="genre-list" v-bind:options="globalUniqueGenres"></b-form-datalist>
-												</b-form-group>
+												<div class="globalMergeLabelDiv">
+													<label>Genre</label>
+													<v-icon id="genreTooltip" small>info</v-icon>
+												</div>
+												<b-form-input
+													id="globalGenreSelect"
+													list="genre-list"
+													size="sm"
+													placeholder="Enter Genre"
+												></b-form-input>
+												<b-form-datalist id="genre-list" v-bind:options="globalUniqueGenres"></b-form-datalist>
+												<b-tooltip
+													target="genreTooltip"
+													triggers="hover"
+												>Genre based on the spotify defined genres for the artist of the song.</b-tooltip>
 											</v-col>
 											<v-col cols="3">
-												<b-form-group label="Energy" style="color:white;">
-													<b-form-select :value="null" id="songEnergy" size="sm" :options="songEnergySelections"></b-form-select>
-												</b-form-group>
+												<div class="globalMergeLabelDiv">
+													<label>Energy</label>
+													<v-icon id="energyTooltip" small>info</v-icon>
+												</div>
+												<b-form-select :value="null" id="songEnergy" size="sm" :options="songEnergySelections"></b-form-select>
+												<b-tooltip
+													target="energyTooltip"
+													triggers="hover"
+												>Measure of the song intensity and activity.</b-tooltip>
 											</v-col>
 										</v-row>
 										<v-row>
 											<v-col cols="3">
-												<b-form-group label="Valence" style="color:white;">
-													<b-form-select
-														:value="null"
-														id="songValence"
-														size="sm"
-														:options="songValenceSelections"
-													></b-form-select>
-												</b-form-group>
+												<div class="globalMergeLabelDiv">
+													<label>Valence</label>
+													<v-icon id="valenceTooltip" small>info</v-icon>
+												</div>
+												<b-form-select
+													:value="null"
+													id="songValence"
+													size="sm"
+													:options="songValenceSelections"
+												></b-form-select>
+												<b-tooltip
+													target="valenceTooltip"
+													triggers="hover"
+												>Musical positiveness conveyed by the song. Songs with high valence sound more positive, while songs with low valence more negative.</b-tooltip>
 											</v-col>
 											<v-col cols="3">
-												<b-form-group label="Tempo(BPM)" class="formGroup">
-													<div class="gridStyle">
-														<label style="text-align:right;">Min</label>
-														<b-form-input
-															id="minTempo"
-															type="range"
-															min="0"
-															max="300"
-															v-model="minTempo"
-															step="5"
-														></b-form-input>
-														<label style="text-align:left;">{{minTempo}}</label>
-														<label style="text-align:right;">Max</label>
-														<b-form-input
-															id="maxTempo"
-															type="range"
-															min="0"
-															max="300"
-															v-model="maxTempo"
-															step="5"
-														></b-form-input>
-														<label style="text-align:left;">{{maxTempo}}</label>
-													</div>
-												</b-form-group>
+												<div class="globalMergeLabelDiv">
+													<label>Danceability</label>
+													<v-icon id="danceabilityTooltip" small>info</v-icon>
+												</div>
+												<b-form-select
+													:value="null"
+													id="songDanceability"
+													size="sm"
+													:options="songDanceabilitySelections"
+												></b-form-select>
+												<b-tooltip
+													target="danceabilityTooltip"
+													triggers="hover"
+												>How suitable the song is for dancing.</b-tooltip>
+											</v-col>
+											<v-col cols="3">
+												<div class="globalMergeLabelDiv">
+													<label>Tempo(BPM)</label>
+													<v-icon id="tempoTooltip" small>info</v-icon>
+												</div>
+												<div class="gridStyle">
+													<label style="text-align:right;">Min</label>
+													<b-form-input id="minTempo" type="range" min="0" max="300" v-model="minTempo" step="5"></b-form-input>
+													<label style="text-align:left;">{{minTempo}}</label>
+													<label style="text-align:right;">Max</label>
+													<b-form-input id="maxTempo" type="range" min="0" max="300" v-model="maxTempo" step="5"></b-form-input>
+													<label style="text-align:left;">{{maxTempo}}</label>
+												</div>
+												<b-tooltip
+													target="tempoTooltip"
+													triggers="hover"
+												>Estimated tempo of the track in beats ber minute (BPM).</b-tooltip>
 											</v-col>
 										</v-row>
 										<v-row>
@@ -465,6 +507,8 @@ export default class MainPage extends Vue {
 	private songValenceSelections: any[] = [{ value: null, text: '--Select Song Valence--' }, { value: 'most_positive', text: 'Most Positive Sounding' },
 	{ value: 'positive', text: 'Positive Sounding' }, { value: 'neutral', text: 'Neutral Sounding' }, { value: 'negative', text: 'Negative Sounding' },
 	{ value: 'most_negative', text: 'Most Negative Sounding' }];
+	private songDanceabilitySelections: any[] = [{ value: null, text: '--Select Song Danceability--' }, { value: 'most_danceable', text: 'Most Danceable' },
+	{ value: 'danceable', text: 'Danceable' }, { value: 'least_danceable', text: 'Least Danceable' }];
 	private selectedTopSong: any = null;
 	private playlists: playlist[] = [];
 	private playlistSongsSelected: playlistSongs[] = [];
@@ -519,10 +563,6 @@ export default class MainPage extends Vue {
 	public resiveEventHandler() {
 		if (window.innerWidth > 610) {
 			this.searchMenuClicked = false;
-			//this.globalMergeExpanded = true;
-		}
-		if (window.innerWidth < 610) {
-			//this.globalMergeExpanded = false;
 		}
 	}
 
@@ -980,6 +1020,57 @@ export default class MainPage extends Vue {
 		return fromAllTemp;
 	}
 
+	public MergeSongsDanceability(songsAudioFeatures: songAudioFeatures[], mergeCheck: boolean, songDanceabilitySelected: string, fromAll?: any): Object {
+		let fromAllTemp: any = new Object();
+		const playlistSongs: playlistItem[] = this.playlistSongsSelected.flatMap(x => x.songs);
+		songsAudioFeatures.forEach((audioFeature) => {
+			if (audioFeature && audioFeature.danceability) {
+				const danceability = audioFeature.danceability;
+				const playlistItemSong: playlistItem | undefined = playlistSongs.find(x => x.songId == audioFeature.songID);
+				if (playlistItemSong) {
+					switch (songDanceabilitySelected) {
+						case 'most_danceable':
+							if (danceability > 0.8) {
+								if (mergeCheck) {
+									const inMergedValue = fromAll[audioFeature.songUri];
+									if (inMergedValue) {
+										fromAllTemp[audioFeature.songUri] = playlistItemSong;
+									}
+								} else {
+									fromAllTemp[audioFeature.songUri] = playlistItemSong;
+								}
+							}
+							break;
+						case 'danceable':
+							if (danceability > 0.5) {
+								if (mergeCheck) {
+									const inMergedValue = fromAll[audioFeature.songUri];
+									if (inMergedValue) {
+										fromAllTemp[audioFeature.songUri] = playlistItemSong;
+									}
+								} else {
+									fromAllTemp[audioFeature.songUri] = playlistItemSong;
+								}
+							}
+							break;
+						case 'least_danceable':
+							if (danceability < 0.5) {
+								if (mergeCheck) {
+									const inMergedValue = fromAll[audioFeature.songUri];
+									if (inMergedValue) {
+										fromAllTemp[audioFeature.songUri] = playlistItemSong;
+									}
+								} else {
+									fromAllTemp[audioFeature.songUri] = playlistItemSong;
+								}
+							}
+					}
+				}
+			}
+		});
+		return fromAllTemp;
+	}
+
 	public MergeSongsTempo(songsAudioFeatures: songAudioFeatures[], mergeCheck: boolean, minTempo: number, maxTempo: number, fromAll?: any): Object {
 		let fromAllTemp: any = new Object();
 		const playlistSongs: playlistItem[] = this.playlistSongsSelected.flatMap(x => x.songs);
@@ -1036,8 +1127,7 @@ export default class MainPage extends Vue {
 		const globalGenre: string = (document.getElementById("globalGenreSelect") as HTMLInputElement).value;
 		const songEnergySelected: string = (document.getElementById("songEnergy") as HTMLInputElement).value;
 		const songValenceSelected: string = (document.getElementById("songValence") as HTMLInputElement).value;
-		//const minTempo: string = (document.getElementById("minTempo") as HTMLInputElement).value;
-		//const maxTempo: string = (document.getElementById("maxTempo") as HTMLInputElement).value;
+		const songDanceabilitySelected: string = (document.getElementById("songDanceability") as HTMLInputElement).value;
 		const minTempo: number = this.minTempo;
 		const maxTempo: number = this.maxTempo;
 
@@ -1113,7 +1203,7 @@ export default class MainPage extends Vue {
 					fromAllTemp = this.MergeSongsEnergy(audioFeatures, false, songEnergySelected);
 				} else {
 					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(allSongIds);
-					fromAllTemp = await this.MergeSongsEnergy(audioFeatures, false, songEnergySelected);
+					fromAllTemp = this.MergeSongsEnergy(audioFeatures, false, songEnergySelected);
 					this.globalSongAudioFeatures = audioFeatures;
 				}
 			}
@@ -1143,7 +1233,37 @@ export default class MainPage extends Vue {
 					fromAllTemp = this.MergeSongsValence(audioFeatures, false, songValenceSelected);
 				} else {
 					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(allSongIds);
-					fromAllTemp = await this.MergeSongsValence(audioFeatures, false, songValenceSelected);
+					fromAllTemp = this.MergeSongsValence(audioFeatures, false, songValenceSelected);
+					this.globalSongAudioFeatures = audioFeatures;
+				}
+			}
+			fromAll = fromAllTemp;
+		}
+
+		if (songDanceabilitySelected) {
+			let songs: playlistItem[] = Object.values(fromAll);
+			let fromAllTemp: any = new Object();
+			if (songs.length > 0) {
+				let songIds: string[] = [];
+				songs.forEach(song => {
+					if (!songIds.includes(song.songId)) {
+						songIds.push(song.songId);
+					}
+				});
+				if (this.globalSongAudioFeatures.length > 0) {
+					const audioFeatures: songAudioFeatures[] = this.globalSongAudioFeatures.filter(x => songIds.includes(x.songID));
+					fromAllTemp = this.MergeSongsDanceability(audioFeatures, true, songDanceabilitySelected, fromAll);
+				} else {
+					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(songIds);
+					fromAllTemp = this.MergeSongsDanceability(audioFeatures, true, songDanceabilitySelected, fromAll);
+				}
+			} else {
+				if (this.globalSongAudioFeatures.length > 0) {
+					const audioFeatures: songAudioFeatures[] = this.globalSongAudioFeatures;
+					fromAllTemp = this.MergeSongsDanceability(audioFeatures, false, songDanceabilitySelected);
+				} else {
+					const audioFeatures: songAudioFeatures[] = await this.GetAudioFeatures(allSongIds);
+					fromAllTemp = this.MergeSongsDanceability(audioFeatures, false, songDanceabilitySelected);
 					this.globalSongAudioFeatures = audioFeatures;
 				}
 			}
@@ -1206,7 +1326,9 @@ export default class MainPage extends Vue {
 			const length: number = this.selectedSongsForMergeStack.GetLength();
 			if (length < 2) {
 				this.selectedSongsForMergeStack.playlistSongsSelectDisplay = [];
+				this.selectedSongsForMergeStack.PopPlaylistItem();
 			} else {
+
 				this.selectedSongsForMergeStack.PopPlaylistItem();
 
 				this.selectedSongsForMergeStack.playlistSongsSelectDisplay = this.selectedSongsForMergeStack.GetTopPlaylistItem();
@@ -1294,6 +1416,25 @@ export default class MainPage extends Vue {
 	display: grid;
 	grid-template-columns: 12% 75% 12%;
 	grid-gap: 5px;
+}
+
+.gridStyle label {
+	color: white;
+}
+
+.globalMergeLabelDiv {
+	display: flex;
+	margin: auto;
+	width: max-content;
+}
+
+.globalMergeLabelDiv label {
+	color: white;
+}
+
+.globalMergeLabelDiv i {
+	margin-bottom: 0.5rem;
+	margin-left: 0.5rem;
 }
 
 @media screen and (max-width: 1330px) {
