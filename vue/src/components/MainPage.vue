@@ -39,7 +39,12 @@
 			/>
 		</nav>
 		<div class="container-fluid">
-			<v-navigation-drawer v-model="drawer" absolute temporary class="showResponsiveNav">
+			<v-navigation-drawer
+				v-model="drawer"
+				temporary
+				class="showResponsiveNav"
+				style="position:fixed;"
+			>
 				<v-list rounded style="background-color">
 					<v-subheader>
 						Playlists
@@ -1427,6 +1432,7 @@ export default class MainPage extends Vue {
 .globalMergeLabelDiv i {
 	margin-bottom: 0.5rem;
 	margin-left: 0.5rem;
+	color: #1db954;
 }
 
 @media screen and (max-width: 1330px) {
